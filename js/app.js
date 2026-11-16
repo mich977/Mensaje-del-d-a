@@ -60,6 +60,7 @@
     dom.btnInvokeIcon = document.getElementById('btn-invoke-icon');
     dom.btnInvokeLabel = document.getElementById('btn-invoke-label');
     dom.btnDownload = document.getElementById('btn-download');
+    dom.btnShareIg = document.getElementById('btn-share-ig');
     dom.btnCopyCaption = document.getElementById('btn-copy-caption');
     dom.btnShuffleNature = document.getElementById('btn-shuffle-nature');
     dom.captionBox = document.getElementById('caption-preview');
@@ -480,6 +481,7 @@
 
     dom.captionBox.value = o.caption || '';
     dom.btnDownload.disabled = false;
+    if (dom.btnShareIg) dom.btnShareIg.disabled = false;
     dom.btnCopyCaption.disabled = false;
     if (dom.btnShuffleNature) dom.btnShuffleNature.disabled = false;
 
@@ -853,33 +855,98 @@
     }
   }
 
-  function downloadCanvasHD() {
-    if (!state.currentOracle) return;
+  async function getCanvasPngExport() {
+    if (!state.currentOracle) return null;
     const now = new Date();
     const stamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(
       now.getDate()
     ).padStart(2, '0')}-${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
-    const fileName = `oraculo-${state.settings.tema}-${state.settings.formato.replace(':', 'x')}-${stamp}.png`;
+    const tag = state.settings.modo === 'efemeride' ? 'efemeride' : state.settings.filtro || 'oraculo';
+    const fileName = `seedsoulnow-${tag}-${state.settings.formato.replace(':', 'x')}-${stamp}.png`;
 
-    dom.canvas.toBlob(
-      (blob) => {
-        if (!blob) {
-          showToast('No se pudo exportar la imagen PNG.', 'error');
-          return;
-        }
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = fileName;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        setTimeout(() => URL.revokeObjectURL(url), 1500);
-        showToast(`Imagen HD descargada (${FORMAT_DIMENSIONS[state.settings.formato].label}).`, 'success');
-      },
-      'image/png',
-      1.0
-    );
+    const blob = await new Promise((resolve) => dom.canvas.toBlob(resolve, 'image/png', 1.0));
+    if (!blob) return null;
+    return { blob, fileName };
+  }
+
+  function triggerLegacyBlobDownload(blob, fileName) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+    showToast(`Imagen HD descargada (${FORMAT_DIMENSIONS[state.settings.formato].label}).`, 'success');
+  }
+
+  async function downloadCanvasHD() {
+    const exported = await getCanvasPngExport();
+    if (!exported) {
+      if (state.currentOracle) showToast('No se pudo exportar la imagen PNG.', 'error');
+      return;
+    }
+
+    const { blob, fileName } = exported;
+
+    // En PC (Chrome/Edge): abrir selector directo en carpeta Imágenes y recordar carpeta elegida
+    if (typeof global.showSaveFilePicker === 'function') {
+      try {
+        const handle = await global.showSaveFilePicker({
+          id: 'seedsoulnow-images',
+          startIn: 'pictures',
+          suggestedName: fileName,
+          types: [{ description: 'Imagen PNG HD', accept: { 'image/png': ['.png'] } }]
+        });
+        const writable = await handle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+        showToast('Imagen HD guardada en tu carpeta elegida.', 'success');
+        return;
+      } catch (err) {
+        if (err?.name === 'AbortError') return;
+        // Si el navegador bloquea el selector (ej. móvil o iframe), usar descarga estándar
+      }
+    }
+
+    triggerLegacyBlobDownload(blob, fileName);
+  }
+
+  async function shareToInstagramOrPhotos() {
+    const exported = await getCanvasPngExport();
+    if (!exported) {
+      if (state.currentOracle) showToast('No se pudo preparar la imagen para compartir.', 'error');
+      return;
+    }
+
+    const { blob, fileName } = exported;
+    const captionText = (dom.captionBox.value || '').trim();
+
+    if (captionText && navigator.clipboard && global.isSecureContext) {
+      navigator.clipboard.writeText(captionText).catch(() => {});
+    }
+
+    try {
+      const file = new File([blob], fileName, { type: 'image/png' });
+      if (typeof navigator.share === 'function' && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: 'Seed & Soul',
+          text: captionText
+        });
+        showToast('¡Imagen enviada! El caption ya quedó copiado para pegarlo en Instagram.', 'success');
+        return;
+      }
+    } catch (err) {
+      if (err?.name === 'AbortError') return;
+      console.warn('[Oráculo] Web Share omitido, usando guardado directo:', err);
+    }
+
+    await downloadCanvasHD();
+    if (captionText) {
+      showToast('Caption copiado al portapapeles y selector de guardado abierto.', 'info');
+    }
   }
 
   async function copyCaptionToClipboard() {
@@ -1068,6 +1135,9 @@
   function bindEvents() {
     dom.btnInvoke.addEventListener('click', () => invokeOracle({ forceLocal: false }));
     dom.btnDownload.addEventListener('click', downloadCanvasHD);
+    if (dom.btnShareIg) {
+      dom.btnShareIg.addEventListener('click', shareToInstagramOrPhotos);
+    }
     dom.btnCopyCaption.addEventListener('click', copyCaptionToClipboard);
     if (dom.btnShuffleNature) {
       dom.btnShuffleNature.addEventListener('click', shuffleNatureBackground);
