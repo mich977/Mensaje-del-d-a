@@ -19,7 +19,7 @@
 
   const { renderOracleCanvas, FORMAT_DIMENSIONS, ATMOSPHERE_PALETTES } = global.OraculoCanvas;
 
-  const APP_VERSION = 'v1.0.38';
+  const APP_VERSION = 'v1.0.39';
   const STORAGE_SETTINGS_KEY = 'oraculo_cf_settings';
   const STORAGE_HISTORY_KEY = 'oraculo_cf_history';
   const STORAGE_QR_URL_KEY = 'oraculo_cf_public_url';
@@ -68,6 +68,7 @@
     dom.artBadge = document.getElementById('art-source-badge');
     dom.numerologyPill = document.getElementById('daily-numerology-pill');
     dom.appVersionBadge = document.getElementById('app-version-badge');
+    dom.settingsVersionBadge = document.getElementById('settings-version-badge');
     dom.apiStatusPill = document.getElementById('api-status-pill');
 
     dom.btnModeEsperanza = document.getElementById('btn-mode-esperanza');
@@ -456,13 +457,15 @@
     }
 
     if (hasApiKey()) {
-      dom.apiStatusPill.textContent = 'Gemini API Activa';
+      dom.apiStatusPill.textContent = 'G-API-on';
+      dom.apiStatusPill.title = 'Gemini API Activa';
       dom.apiStatusPill.className =
-        'inline-flex items-center gap-1.5 rounded-full border border-emerald-400 bg-emerald-100 px-2.5 py-1 text-[11px] font-mono font-semibold text-emerald-800';
+        'inline-flex items-center gap-1 rounded-full border border-emerald-400 bg-emerald-100 px-2 py-0.5 text-[10px] font-mono font-semibold text-emerald-800 shrink-0';
     } else {
-      dom.apiStatusPill.textContent = 'Sin API Key (Configurar)';
+      dom.apiStatusPill.textContent = 'G-API-off';
+      dom.apiStatusPill.title = 'Sin API Key — Toca para configurar';
       dom.apiStatusPill.className =
-        'inline-flex items-center gap-1.5 rounded-full border border-amber-400 bg-amber-100 px-2.5 py-1 text-[11px] font-mono font-semibold text-amber-800 cursor-pointer';
+        'inline-flex items-center gap-1 rounded-full border border-amber-400 bg-amber-100 px-2 py-0.5 text-[10px] font-mono font-semibold text-amber-800 cursor-pointer shrink-0';
     }
   }
 
@@ -599,17 +602,28 @@
       );
     };
 
+    const isTimeoutOrNetworkError = (err) => {
+      const msg = String(err?.message || '');
+      return (
+        err?.code === 'TIMEOUT' ||
+        err?.name === 'AbortError' ||
+        /signal is aborted|aborted|timed?\s*out|tiempo de espera|failed to fetch|networkerror/i.test(msg)
+      );
+    };
+
     const markQuotaPill = () => {
       if (dom.apiStatusPill) {
-        dom.apiStatusPill.textContent = 'Cuota Gemini Agotada · Modo Local';
+        dom.apiStatusPill.textContent = 'G-API-429';
+        dom.apiStatusPill.title = 'Cuota Gemini Agotada · Modo Local';
         dom.apiStatusPill.className =
-          'inline-flex items-center gap-1.5 rounded-full border border-rose-400 bg-rose-100 px-2.5 py-1 text-[11px] font-mono font-semibold text-rose-800 cursor-pointer';
+          'inline-flex items-center gap-1 rounded-full border border-rose-400 bg-rose-100 px-2 py-0.5 text-[10px] font-mono font-semibold text-rose-800 cursor-pointer shrink-0';
       }
     };
 
     try {
       let textPayload;
       let usedQuotaFallback = false;
+      let usedTimeoutFallback = false;
       let webConnected = false;
       let webAttempted = false;
       let webSources = [];
@@ -689,6 +703,9 @@
               usedQuotaFallback = true;
               markQuotaPill();
               textPayload = buildLocalEphemerisFallback(ephData.item, contexto);
+            } else if (isTimeoutOrNetworkError(geminiErr)) {
+              usedTimeoutFallback = true;
+              textPayload = buildLocalEphemerisFallback(ephData.item, contexto);
             } else {
               throw geminiErr;
             }
@@ -741,6 +758,9 @@
               usedQuotaFallback = true;
               markQuotaPill();
               textPayload = buildLocalOracleFallback(contexto);
+            } else if (isTimeoutOrNetworkError(geminiErr)) {
+              usedTimeoutFallback = true;
+              textPayload = buildLocalOracleFallback(contexto);
             } else {
               throw geminiErr;
             }
@@ -772,7 +792,7 @@
         webPulseAttempted: webAttempted,
         webSnippet,
         imageDataUrl: artResult.imageDataUrl,
-        artSource: usedQuotaFallback ? `${artResult.source} (Respaldo Local)` : artResult.source
+        artSource: usedQuotaFallback || usedTimeoutFallback ? `${artResult.source} (Respaldo Local)` : artResult.source
       };
 
       state.currentOracle = finalOracle;
@@ -784,6 +804,12 @@
           '⚠️ Tu API Key alcanzó el límite de cuota/créditos de Gemini (429). Se generó contenido local distinto.',
           'warning',
           7500
+        );
+      } else if (usedTimeoutFallback) {
+        showToast(
+          '⚠️ Gemini tardó demasiado en responder. Se generó contenido local para que puedas seguir creando.',
+          'warning',
+          6500
         );
       } else if (isEphemeris) {
         showToast(
@@ -1372,6 +1398,7 @@
   async function init() {
     cacheDom();
     if (dom.appVersionBadge) dom.appVersionBadge.textContent = APP_VERSION;
+    if (dom.settingsVersionBadge) dom.settingsVersionBadge.textContent = APP_VERSION;
     loadSettings();
     loadHistory();
     syncUIControls();

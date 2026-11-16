@@ -16,9 +16,24 @@
 
   async function fetchWithTimeout(url, options = {}, timeoutMs = 5000) {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    let timedOut = false;
+    const timer = setTimeout(() => {
+      timedOut = true;
+      try {
+        controller.abort(new Error(`Tiempo de espera web agotado (${Math.round(timeoutMs / 1000)}s)`));
+      } catch {
+        controller.abort();
+      }
+    }, timeoutMs);
     try {
       return await fetch(url, { ...options, signal: controller.signal });
+    } catch (err) {
+      if (timedOut || err?.name === 'AbortError' || /signal is aborted/i.test(String(err?.message || ''))) {
+        const tErr = new Error(`Tiempo de espera web agotado (${Math.round(timeoutMs / 1000)}s)`);
+        tErr.code = 'TIMEOUT';
+        throw tErr;
+      }
+      throw err;
     } finally {
       clearTimeout(timer);
     }

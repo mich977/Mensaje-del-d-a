@@ -51,7 +51,13 @@ module.exports = async function handler(req, res) {
 
   try {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 4500);
+    const timer = setTimeout(() => {
+      try {
+        controller.abort(new Error('RSS timeout (4.5s)'));
+      } catch {
+        controller.abort();
+      }
+    }, 4500);
 
     const response = await fetch(pickedFeed.url, {
       signal: controller.signal,

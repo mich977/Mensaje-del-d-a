@@ -20,11 +20,28 @@
   let imageDisabledForKey = '';
   let discoveredCache = { apiKey: '', ready: false, textModel: TEXT_MODEL, predictImageModels: [], contentImageModels: [] };
 
-  async function fetchWithTimeout(url, options = {}, timeoutMs = 6500) {
+  async function fetchWithTimeout(url, options = {}, timeoutMs = 15000) {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    let timedOut = false;
+    const timer = setTimeout(() => {
+      timedOut = true;
+      try {
+        controller.abort(new Error(`Tiempo de espera agotado (${Math.round(timeoutMs / 1000)}s)`));
+      } catch {
+        controller.abort();
+      }
+    }, timeoutMs);
     try {
       return await fetch(url, { ...options, signal: controller.signal });
+    } catch (err) {
+      if (timedOut || err?.name === 'AbortError' || /signal is aborted|aborted/i.test(String(err?.message || ''))) {
+        const tErr = new Error(
+          `La conexión con Gemini tardó más de ${Math.round(timeoutMs / 1000)}s. Intenta nuevamente.`
+        );
+        tErr.code = 'TIMEOUT';
+        throw tErr;
+      }
+      throw err;
     } finally {
       clearTimeout(timer);
     }
@@ -70,7 +87,11 @@
       return discoveredCache;
     }
 
-    const res = await fetch(`${GEMINI_BASE_URL}?key=${encodeURIComponent(apiKey)}`, { method: 'GET' });
+    const res = await fetchWithTimeout(
+      `${GEMINI_BASE_URL}?key=${encodeURIComponent(apiKey)}`,
+      { method: 'GET' },
+      10000
+    );
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
       throw new Error(errData?.error?.message || `Error HTTP ${res.status} al validar la clave.`);
@@ -434,7 +455,7 @@ DEVUELVE SOLO JSON VÁLIDO CON ESTOS 5 CAMPOS:
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(buildBodyForModel(modelName, includeThinking))
         },
-        15000
+        28000
       );
 
       // Si el modelo concreto rechaza thinkingConfig con 400, reintentar sin él de inmediato
