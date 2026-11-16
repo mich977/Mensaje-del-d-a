@@ -12,14 +12,16 @@
     hasApiKey,
     testApiKey,
     generateOracleText,
-    generateOracleArt,
-    buildLocalOracleFallback
+    generateEphemerisCard,
+    buildLocalOracleFallback,
+    buildLocalEphemerisFallback
   } = global.OraculoGemini;
 
   const { renderOracleCanvas, FORMAT_DIMENSIONS, ATMOSPHERE_PALETTES } = global.OraculoCanvas;
 
   const STORAGE_SETTINGS_KEY = 'oraculo_cf_settings';
   const STORAGE_HISTORY_KEY = 'oraculo_cf_history';
+  const STORAGE_QR_URL_KEY = 'oraculo_cf_public_url';
   const MAX_HISTORY = 5;
 
   const FILTROS = {
@@ -34,6 +36,8 @@
     sabiduria: null,
     settings: {
       tema: 'naturaleza',
+      modo: 'esperanza',
+      efemerideEnfoque: 'mixto',
       formato: '4:5',
       firma: 'By Michael_NB-γ',
       filtro: 'aleatorio',
@@ -53,6 +57,8 @@
     dom.canvasLoading = document.getElementById('canvas-loading');
     dom.loadingLabel = document.getElementById('loading-label');
     dom.btnInvoke = document.getElementById('btn-invoke');
+    dom.btnInvokeIcon = document.getElementById('btn-invoke-icon');
+    dom.btnInvokeLabel = document.getElementById('btn-invoke-label');
     dom.btnDownload = document.getElementById('btn-download');
     dom.btnCopyCaption = document.getElementById('btn-copy-caption');
     dom.btnShuffleNature = document.getElementById('btn-shuffle-nature');
@@ -61,10 +67,14 @@
     dom.numerologyPill = document.getElementById('daily-numerology-pill');
     dom.apiStatusPill = document.getElementById('api-status-pill');
 
+    dom.btnModeEsperanza = document.getElementById('btn-mode-esperanza');
+    dom.btnModeEfemeride = document.getElementById('btn-mode-efemeride');
+    dom.streamWrapper = document.getElementById('stream-wrapper');
+    dom.ephemerisFocusWrapper = document.getElementById('ephemeris-focus-wrapper');
+    dom.ephemerisFocusSelect = document.getElementById('ephemeris-focus-select');
+
     dom.streamSelect = document.getElementById('stream-select');
     dom.toggleWebPulse = document.getElementById('toggle-web-pulse');
-    dom.webSourcesBox = document.getElementById('web-sources-box');
-    dom.webSourcesList = document.getElementById('web-sources-list');
     dom.formatBtns = document.querySelectorAll('[data-format-btn]');
 
     dom.btnOpenSettings = document.getElementById('btn-open-settings');
@@ -84,24 +94,36 @@
     dom.btnClearHistory = document.getElementById('btn-clear-history');
     dom.toastContainer = document.getElementById('toast-container');
     dom.btnInstallPwa = document.getElementById('btn-install-pwa');
+
+    dom.btnOpenQr = document.getElementById('btn-open-qr');
+    dom.qrModal = document.getElementById('qr-modal');
+    dom.btnCloseQr = document.getElementById('btn-close-qr');
+    dom.inputQrUrl = document.getElementById('input-qr-url');
+    dom.qrUrlHint = document.getElementById('qr-url-hint');
+    dom.btnFixGhPages = document.getElementById('btn-fix-gh-pages');
+    dom.qrCanvas = document.getElementById('qr-canvas');
+    dom.qrEmptyState = document.getElementById('qr-empty-state');
+    dom.qrEncodedLabel = document.getElementById('qr-encoded-label');
+    dom.btnDownloadQr = document.getElementById('btn-download-qr');
   }
 
-  function showToast(message, type = 'info') {
+  function showToast(message, type = 'info', durationMs = null) {
     const colors = {
-      info: 'border-cyan-400/50 bg-slate-900/95 text-cyan-100',
-      success: 'border-emerald-400/50 bg-slate-900/95 text-emerald-100',
-      warning: 'border-amber-400/50 bg-slate-900/95 text-amber-100',
-      error: 'border-rose-500/60 bg-slate-950/95 text-rose-100'
+      info: 'border-sky-400 bg-white/95 text-sky-900 shadow-lg',
+      success: 'border-emerald-400 bg-white/95 text-emerald-900 shadow-lg',
+      warning: 'border-amber-400 bg-white/95 text-amber-900 shadow-lg',
+      error: 'border-rose-500 bg-rose-50/95 text-rose-900 shadow-lg'
     };
     const toast = document.createElement('div');
     toast.className = `pointer-events-auto rounded-xl border px-4 py-3 text-sm font-medium shadow-2xl backdrop-blur-md transition-all duration-300 ${colors[type] || colors.info}`;
     toast.textContent = message;
     dom.toastContainer.appendChild(toast);
 
+    const ttl = durationMs || (type === 'error' || type === 'warning' ? 6800 : 3200);
     setTimeout(() => {
       toast.classList.add('opacity-0', 'translate-y-2');
       setTimeout(() => toast.remove(), 300);
-    }, 3200);
+    }, ttl);
   }
 
   function calcularVibracionFecha(fecha = new Date()) {
@@ -326,7 +348,7 @@
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className =
-        'w-full text-left rounded-xl border border-slate-800/90 bg-slate-900/70 hover:border-cyan-400/50 hover:bg-slate-900 p-3.5 transition-all group';
+        'w-full text-left rounded-xl border border-slate-300 bg-white hover:border-sky-500 hover:bg-sky-50/50 p-3.5 shadow-sm transition-all group';
       const fecha = new Date(item.timestamp).toLocaleString('es-ES', {
         day: '2-digit',
         month: 'short',
@@ -335,11 +357,11 @@
       });
       btn.innerHTML = `
         <div class="flex items-center justify-between gap-2 mb-1">
-          <span class="text-[11px] font-mono uppercase tracking-wider text-cyan-400">${escapeHtml(item.filtroLabel || 'Oráculo')} · N° ${item.numeroDia || '-'}</span>
+          <span class="text-[11px] font-mono font-semibold uppercase tracking-wider text-sky-700">${escapeHtml(item.filtroLabel || 'Oráculo')} · N° ${item.numeroDia || '-'}</span>
           <span class="text-[11px] text-slate-500">${escapeHtml(fecha)}</span>
         </div>
-        <p class="text-xs font-semibold text-slate-100 line-clamp-1 group-hover:text-cyan-300 transition-colors">${escapeHtml(item.gancho)}</p>
-        <p class="text-xs text-slate-400 line-clamp-2 mt-1">${escapeHtml(item.frase)}</p>
+        <p class="text-xs font-semibold text-slate-900 line-clamp-1 group-hover:text-sky-700 transition-colors">${escapeHtml(item.gancho)}</p>
+        <p class="text-xs text-slate-600 line-clamp-2 mt-1">${escapeHtml(item.frase)}</p>
       `;
       btn.addEventListener('click', async () => {
         state.currentOracle = { ...item };
@@ -352,24 +374,50 @@
   }
 
   function syncUIControls() {
-    const { formato, filtro } = state.settings;
+    const { formato, filtro, modo, efemerideEnfoque } = state.settings;
+    const isEph = modo === 'efemeride';
+
+    if (dom.btnModeEsperanza && dom.btnModeEfemeride) {
+      dom.btnModeEsperanza.className = `rounded-lg border px-3 py-2 text-xs font-semibold transition-all ${
+        !isEph
+          ? 'bg-sky-600 text-white border-sky-600 shadow-md'
+          : 'text-slate-600 border-transparent hover:text-slate-900 hover:bg-slate-200/70'
+      }`;
+      dom.btnModeEfemeride.className = `rounded-lg border px-3 py-2 text-xs font-semibold transition-all ${
+        isEph
+          ? 'bg-orange-500 text-white border-orange-500 shadow-md'
+          : 'text-slate-600 border-transparent hover:text-slate-900 hover:bg-slate-200/70'
+      }`;
+    }
+
+    if (dom.streamWrapper) dom.streamWrapper.classList.toggle('hidden', isEph);
+    if (dom.ephemerisFocusWrapper) dom.ephemerisFocusWrapper.classList.toggle('hidden', !isEph);
+    if (dom.ephemerisFocusSelect) dom.ephemerisFocusSelect.value = efemerideEnfoque || 'mixto';
+    if (dom.btnInvokeIcon) dom.btnInvokeIcon.textContent = isEph ? '📅' : '✨';
+    if (dom.btnInvokeLabel) {
+      dom.btnInvokeLabel.textContent = isEph ? 'INVOCAR EFEMÉRIDE DE HOY' : 'INVOCAR MENSAJE';
+    }
 
     dom.formatBtns.forEach((b) => {
       const active = b.dataset.formatBtn === formato;
-      b.classList.toggle('bg-cyan-500/20', active);
-      b.classList.toggle('text-cyan-300', active);
-      b.classList.toggle('border-cyan-400/50', active);
-      b.classList.toggle('text-slate-400', !active);
-      b.classList.toggle('border-slate-800', !active);
+      b.classList.toggle('bg-sky-600', active);
+      b.classList.toggle('text-white', active);
+      b.classList.toggle('border-sky-600', active);
+      b.classList.toggle('shadow-sm', active);
+      b.classList.toggle('bg-white', !active);
+      b.classList.toggle('text-slate-600', !active);
+      b.classList.toggle('border-slate-300', !active);
     });
 
     dom.modalFormatBtns.forEach((b) => {
       const active = b.dataset.modalFormat === formato;
-      b.classList.toggle('bg-cyan-500/20', active);
-      b.classList.toggle('text-cyan-300', active);
-      b.classList.toggle('border-cyan-400/60', active);
-      b.classList.toggle('text-slate-400', !active);
-      b.classList.toggle('border-slate-700', !active);
+      b.classList.toggle('bg-sky-600', active);
+      b.classList.toggle('text-white', active);
+      b.classList.toggle('border-sky-600', active);
+      b.classList.toggle('shadow-sm', active);
+      b.classList.toggle('bg-white', !active);
+      b.classList.toggle('text-slate-600', !active);
+      b.classList.toggle('border-slate-300', !active);
     });
 
     dom.canvasWrapper.style.aspectRatio = formato === '9:16' ? '9 / 16' : '4 / 5';
@@ -381,63 +429,12 @@
     if (hasApiKey()) {
       dom.apiStatusPill.textContent = 'Gemini API Activa';
       dom.apiStatusPill.className =
-        'inline-flex items-center gap-1.5 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-mono text-emerald-300';
+        'inline-flex items-center gap-1.5 rounded-full border border-emerald-400 bg-emerald-100 px-2.5 py-1 text-[11px] font-mono font-semibold text-emerald-800';
     } else {
       dom.apiStatusPill.textContent = 'Sin API Key (Configurar)';
       dom.apiStatusPill.className =
-        'inline-flex items-center gap-1.5 rounded-full border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 text-[11px] font-mono text-amber-300 cursor-pointer';
+        'inline-flex items-center gap-1.5 rounded-full border border-amber-400 bg-amber-100 px-2.5 py-1 text-[11px] font-mono font-semibold text-amber-800 cursor-pointer';
     }
-  }
-
-  function renderWebSources(oracle) {
-    if (!dom.webSourcesBox || !dom.webSourcesList) return;
-    dom.webSourcesList.innerHTML = '';
-
-    const sources = oracle?.webSources || [];
-    const attempted = Boolean(oracle?.webPulseAttempted);
-
-    if (sources.length === 0 && !attempted) {
-      dom.webSourcesBox.classList.add('hidden');
-      return;
-    }
-
-    dom.webSourcesBox.classList.remove('hidden');
-
-    if (sources.length === 0 && attempted) {
-      const warn = document.createElement('p');
-      warn.className = 'text-[11px] font-mono text-amber-300/90 leading-relaxed';
-      warn.textContent =
-        '⚠️ No se pudo alcanzar Wikipedia/Google desde esta red (posible firewall/proxy corporativo o sin internet). Se usó sabiduría local.';
-      dom.webSourcesList.appendChild(warn);
-      return;
-    }
-
-    if (oracle?.webSnippet) {
-      const snip = document.createElement('p');
-      snip.className = 'w-full text-[11px] text-slate-300 leading-relaxed mb-1';
-      snip.textContent = oracle.webSnippet;
-      dom.webSourcesList.appendChild(snip);
-    }
-
-    sources.forEach((src) => {
-      const label = `${src.origin ? `${src.origin}: ` : ''}${src.title || 'Fuente web'}`;
-      if (src.url && /^https?:\/\//i.test(src.url)) {
-        const a = document.createElement('a');
-        a.href = src.url;
-        a.target = '_blank';
-        a.rel = 'noopener noreferrer';
-        a.className =
-          'inline-flex items-center gap-1 rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-2.5 py-1 text-[11px] font-mono text-cyan-200 hover:bg-cyan-500/20 transition-colors max-w-full truncate';
-        a.textContent = label;
-        dom.webSourcesList.appendChild(a);
-      } else {
-        const span = document.createElement('span');
-        span.className =
-          'inline-flex items-center rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1 text-[11px] font-mono text-slate-300 max-w-full truncate';
-        span.textContent = label;
-        dom.webSourcesList.appendChild(span);
-      }
-    });
   }
 
   async function refreshCanvasAndCaption() {
@@ -462,7 +459,6 @@
 
     const sourceTag = o.artSource && o.artSource !== 'procedural' ? o.artSource : 'Paisaje Procedural';
     dom.artBadge.textContent = `${atmLabel} · ${sourceTag}`;
-    renderWebSources(o);
   }
 
   async function renderInitialShowcase() {
@@ -470,14 +466,25 @@
     const num = contexto.numerologiaDia;
     dom.numerologyPill.textContent = `Vibración del Día: ${num.numero} · ${num.titulo.split('·')[0].trim()}`;
 
-    if (state.history.length > 0) {
-      state.currentOracle = { ...state.history[0] };
+    const isEphemerisMode = state.settings.modo === 'efemeride';
+    const matchingHistory = state.history.find((h) =>
+      isEphemerisMode ? h.modo === 'efemeride' : h.modo !== 'efemeride'
+    );
+
+    if (matchingHistory) {
+      state.currentOracle = { ...matchingHistory };
       await refreshCanvasAndCaption();
+      return;
+    }
+
+    if (isEphemerisMode) {
+      await invokeOracle({ forceLocal: false });
       return;
     }
 
     state.currentOracle = {
       id: 'welcome',
+      modo: 'esperanza',
       timestamp: Date.now(),
       gancho: 'CUANDO SIENTAS QUE LA TORMENTA NO TERMINA',
       frase:
@@ -517,98 +524,232 @@
   async function invokeOracle({ forceLocal = false } = {}) {
     if (state.isGenerating) return;
 
-    if (!forceLocal && !hasApiKey()) {
+    const isEphemeris = state.settings.modo === 'efemeride';
+    const shouldUseLocalOnly = forceLocal || (isEphemeris && !hasApiKey());
+
+    if (!isEphemeris && !forceLocal && !hasApiKey()) {
       showToast('Ingresa tu GEMINI_API_KEY o usa el Modo Local Demo.', 'warning');
       openSettingsModal();
       return;
     }
 
     const contexto = buildOracleContext(state.settings.filtro);
+    const seenList = [state.currentOracle, ...state.history]
+      .filter((item) => item && item.gancho && item.frase)
+      .map((item) => ({ gancho: item.gancho, frase: item.frase, ephemerisText: item.ephemerisText || '' }));
+    contexto.recentMessages = seenList;
+
+    const allAtms = Object.keys(ATMOSPHERE_PALETTES);
+    const prevAtm = state.currentOracle?.atmosfera;
+    const candidateAtms = allAtms.filter((a) => a !== prevAtm);
+    const targetAtmosphere = candidateAtms[Math.floor(Math.random() * candidateAtms.length)] || 'amanecer';
+    contexto.targetAtmosphere = targetAtmosphere;
+
+    const previousNatureUrl = state.currentOracle?.imageDataUrl || '';
+
+    // Precargar el paisaje natural aleatorio EN PARALELO desde el segundo 0
+    const naturePromise = global.OraculoNature?.fetchRandomNaturePhoto
+      ? global.OraculoNature.fetchRandomNaturePhoto(targetAtmosphere, previousNatureUrl).catch(() => null)
+      : Promise.resolve(null);
+
+    const isQuotaError = (err) => {
+      const msg = String(err?.message || '');
+      return (
+        err?.code === 'QUOTA_EXCEEDED' ||
+        /429|quota|RESOURCE_EXHAUSTED|rate.?limit|billing|credit|exceeded/i.test(msg)
+      );
+    };
+
+    const markQuotaPill = () => {
+      if (dom.apiStatusPill) {
+        dom.apiStatusPill.textContent = 'Cuota Gemini Agotada · Modo Local';
+        dom.apiStatusPill.className =
+          'inline-flex items-center gap-1.5 rounded-full border border-rose-400 bg-rose-100 px-2.5 py-1 text-[11px] font-mono font-semibold text-rose-800 cursor-pointer';
+      }
+    };
 
     try {
-      let webPulse = null;
-      const webAttempted = Boolean(state.settings.webPulseEnabled && global.OraculoWebPulse);
-
-      if (webAttempted) {
-        setLoading(true, '1/3 Conectando con información viva de la web...');
-        webPulse = await global.OraculoWebPulse.gatherLiveWebContext({
-          apiKey: forceLocal ? '' : getApiKey(),
-          contexto
-        });
-        if (webPulse?.connected) {
-          contexto.webPulse = webPulse;
-        }
-      }
-
-      const webConnected = Boolean(webPulse?.connected);
-      const webSnippet = webPulse?.summaryText ? webPulse.summaryText.split('\n')[0] : '';
-
-      setLoading(
-        true,
-        forceLocal
-          ? 'Sintetizando Oráculo de Esperanza...'
-          : `${webConnected ? '2/3' : '1/2'} Canalizando sabiduría con Google Gemini...`
-      );
-
       let textPayload;
+      let usedQuotaFallback = false;
+      let webConnected = false;
+      let webAttempted = false;
+      let webSources = [];
+      let webSnippet = '';
+      let ephemerisTextUsed = '';
       let artResult = { imageDataUrl: null, source: 'procedural' };
 
-      if (forceLocal) {
-        await new Promise((r) => setTimeout(r, 250));
-        textPayload = buildLocalOracleFallback(contexto);
-      } else {
-        textPayload = await generateOracleText(contexto, state.settings.tema);
-
-        state.currentOracle = {
-          id: `orc_${Date.now()}`,
-          timestamp: Date.now(),
-          ...textPayload,
-          filtro: contexto.filtro,
-          filtroLabel: contexto.filtroLabel,
-          numeroDia: contexto.numerologiaDia.numero,
-          webSources: webPulse?.sources || [],
-          webPulseAttempted: webAttempted,
-          webSnippet,
-          imageDataUrl: null,
-          artSource: 'procedural'
-        };
-        await refreshCanvasAndCaption();
-
-        setLoading(true, `${webConnected ? '3/3' : '2/2'} Buscando fondo de naturaleza...`);
-        artResult = await generateOracleArt(textPayload.prompt_arte, state.settings.formato);
-      }
-
-      if (!artResult.imageDataUrl && global.OraculoNature?.fetchRandomNaturePhoto) {
-        setLoading(true, 'Pintando paisaje natural aleatorio...');
-        const previousNatureUrl = state.currentOracle?.imageDataUrl || '';
-        const natureRes = await global.OraculoNature.fetchRandomNaturePhoto(
-          textPayload.atmosfera,
-          previousNatureUrl
+      if (isEphemeris) {
+        const focus = state.settings.efemerideEnfoque || 'mixto';
+        contexto.efemerideEnfoque = focus;
+        setLoading(
+          true,
+          focus === 'chile'
+            ? '1/2 Consultando efemérides de Chile de hoy...'
+            : '1/2 Consultando efemérides mundiales de hoy...'
         );
+        const recentTexts = seenList.flatMap((m) => [m.ephemerisText, m.frase].filter(Boolean));
+        const ephData = await global.OraculoWebPulse.gatherTodayEphemeris({
+          fecha: contexto.fecha,
+          focus,
+          recentTexts
+        });
+
+        webAttempted = true;
+        webConnected = Boolean(ephData?.connected);
+        webSources = ephData?.sources || [];
+        ephemerisTextUsed = ephData?.item?.text || '';
+        webSnippet = ephemerisTextUsed;
+
+        // Buscar y verificar foto real de la efeméride (Wikipedia onthisday o búsqueda temática en Wikimedia)
+        const resolveEventArt = async () => {
+          if (!global.OraculoNature?.verifyCorsImage) return null;
+          const baseCandidates = Array.isArray(ephData?.item?.imageCandidates)
+            ? [...ephData.item.imageCandidates]
+            : [];
+          if (ephData?.item?.imageUrl && !baseCandidates.includes(ephData.item.imageUrl)) {
+            baseCandidates.unshift(ephData.item.imageUrl);
+          }
+
+          const tryList = async (urls) => {
+            const clean = urls.filter((u) => u && u !== previousNatureUrl).slice(0, 4);
+            if (!clean.length) return null;
+            const results = await Promise.allSettled(
+              clean.map((url) =>
+                global.OraculoNature.verifyCorsImage(url, 2600).then(() => url)
+              )
+            );
+            const ok = results.find((r) => r.status === 'fulfilled' && r.value);
+            return ok ? { imageDataUrl: ok.value, source: ephData.item.sourceOrigin || 'Wikipedia' } : null;
+          };
+
+          const firstHit = await tryList(baseCandidates);
+          if (firstHit) return firstHit;
+
+          if (global.OraculoWebPulse?.searchEphemerisTopicImages) {
+            const searched = await global.OraculoWebPulse
+              .searchEphemerisTopicImages(ephData.item)
+              .catch(() => []);
+            const topicHit = await tryList(searched);
+            if (topicHit) {
+              return { imageDataUrl: topicHit.imageDataUrl, source: 'Efeméride (Wikimedia)' };
+            }
+          }
+          return null;
+        };
+
+        const eventPhotoPromise = resolveEventArt();
+
+        if (shouldUseLocalOnly) {
+          textPayload = buildLocalEphemerisFallback(ephData.item, contexto);
+        } else {
+          setLoading(true, '2/2 Redactando efeméride con Gemini...');
+          try {
+            textPayload = await generateEphemerisCard(ephData.item, contexto);
+          } catch (geminiErr) {
+            if (isQuotaError(geminiErr)) {
+              usedQuotaFallback = true;
+              markQuotaPill();
+              textPayload = buildLocalEphemerisFallback(ephData.item, contexto);
+            } else {
+              throw geminiErr;
+            }
+          }
+        }
+
+        const [eventArt, natureRes] = await Promise.all([eventPhotoPromise, naturePromise]);
+        if (eventArt?.imageDataUrl) {
+          artResult = eventArt;
+        } else if (natureRes?.imageDataUrl) {
+          artResult = natureRes;
+        }
+      } else {
+        let webPulse = null;
+        webAttempted = Boolean(state.settings.webPulseEnabled && global.OraculoWebPulse);
+
+        if (webAttempted) {
+          setLoading(true, '1/2 Conectando pulso web y buscando paisaje...');
+          webPulse = await global.OraculoWebPulse.gatherLiveWebContext({
+            apiKey: shouldUseLocalOnly ? '' : getApiKey(),
+            contexto
+          });
+          if (webPulse?.connected) {
+            contexto.webPulse = webPulse;
+          }
+        }
+
+        webConnected = Boolean(webPulse?.connected);
+        webSources = webPulse?.sources || [];
+        webSnippet = webPulse?.summaryText ? webPulse.summaryText.split('\n')[0] : '';
+
+        setLoading(
+          true,
+          shouldUseLocalOnly
+            ? 'Sintetizando Oráculo de Esperanza...'
+            : `${webConnected ? '2/2' : '1/1'} Creando mensaje único con Gemini...`
+        );
+
+        if (shouldUseLocalOnly) {
+          textPayload = buildLocalOracleFallback(contexto);
+        } else {
+          try {
+            textPayload = await generateOracleText(contexto);
+          } catch (geminiErr) {
+            if (isQuotaError(geminiErr)) {
+              usedQuotaFallback = true;
+              markQuotaPill();
+              textPayload = buildLocalOracleFallback(contexto);
+            } else {
+              throw geminiErr;
+            }
+          }
+        }
+
+        const natureRes = await naturePromise;
         if (natureRes?.imageDataUrl) {
           artResult = natureRes;
         }
       }
 
+      const filtroLabelFinal = isEphemeris
+        ? state.settings.efemerideEnfoque === 'chile'
+          ? '🇨🇱 Efeméride de Chile'
+          : '📅 Efeméride Mundial'
+        : contexto.filtroLabel;
+
       const finalOracle = {
         id: `orc_${Date.now()}`,
         timestamp: Date.now(),
         ...textPayload,
-        filtro: contexto.filtro,
-        filtroLabel: contexto.filtroLabel,
+        modo: isEphemeris ? 'efemeride' : 'esperanza',
+        ephemerisText: ephemerisTextUsed,
+        filtro: isEphemeris ? 'efemeride' : contexto.filtro,
+        filtroLabel: filtroLabelFinal,
         numeroDia: contexto.numerologiaDia.numero,
-        webSources: webPulse?.sources || [],
+        webSources,
         webPulseAttempted: webAttempted,
         webSnippet,
         imageDataUrl: artResult.imageDataUrl,
-        artSource: artResult.source
+        artSource: usedQuotaFallback ? `${artResult.source} (Respaldo Local)` : artResult.source
       };
 
       state.currentOracle = finalOracle;
       await refreshCanvasAndCaption();
       await pushHistory(finalOracle);
 
-      if (webAttempted && !webConnected && artResult.source !== 'nature-photo') {
+      if (usedQuotaFallback) {
+        showToast(
+          '⚠️ Tu API Key alcanzó el límite de cuota/créditos de Gemini (429). Se generó contenido local distinto.',
+          'warning',
+          7500
+        );
+      } else if (isEphemeris) {
+        showToast(
+          webConnected
+            ? '¡Efeméride mundial de hoy creada con datos reales!'
+            : 'Efeméride generada en modo local (sin conexión a Wikipedia).',
+          webConnected ? 'success' : 'warning'
+        );
+      } else if (webAttempted && !webConnected && artResult.source !== 'nature-photo') {
         showToast('Sin acceso a Wikipedia/Google en esta red; se usó sabiduría local.', 'warning');
       } else if (artResult.source === 'nature-photo') {
         showToast(
@@ -616,11 +757,6 @@
             ? '¡Mensaje creado con pulso web y paisaje natural aleatorio!'
             : '¡Mensaje creado con fondo de naturaleza aleatorio!',
           'success'
-        );
-      } else if (artResult.source === 'procedural' && !forceLocal) {
-        showToast(
-          webConnected ? 'Mensaje creado con pulso web en vivo y paisaje adaptativo.' : 'Mensaje generado con paisaje adaptativo.',
-          'info'
         );
       } else {
         showToast(
@@ -630,7 +766,7 @@
       }
     } catch (err) {
       console.error('[Oráculo] Error en invocación:', err);
-      showToast(err.message || 'Error al invocar el mensaje.', 'error');
+      showToast(err.message || 'Error al invocar el mensaje.', 'error', 7000);
     } finally {
       setLoading(false);
     }
@@ -731,9 +867,9 @@
       return;
     }
     const styles = {
-      ok: 'border-emerald-500/50 bg-emerald-500/10 text-emerald-200',
-      error: 'border-rose-500/50 bg-rose-500/10 text-rose-200',
-      info: 'border-cyan-500/40 bg-cyan-500/10 text-cyan-200'
+      ok: 'border-emerald-400 bg-emerald-50 text-emerald-800',
+      error: 'border-rose-400 bg-rose-50 text-rose-800',
+      info: 'border-sky-400 bg-sky-50 text-sky-800'
     };
     dom.apiKeyFeedback.className = `mt-2 rounded-lg border px-2.5 py-2 text-[11px] font-mono leading-relaxed ${styles[status] || styles.info}`;
     dom.apiKeyFeedback.textContent = message;
@@ -751,6 +887,143 @@
   function closeSettingsModal() {
     dom.settingsModal.classList.add('hidden');
     dom.settingsModal.classList.remove('flex');
+  }
+
+  function resolveDefaultQrUrl() {
+    const isPublicHttp =
+      global.location.protocol.startsWith('http') &&
+      !/^(localhost|127\.0\.0\.1)$/i.test(global.location.hostname || '');
+
+    if (isPublicHttp) {
+      return global.location.href.split('#')[0];
+    }
+
+    try {
+      const saved = (localStorage.getItem(STORAGE_QR_URL_KEY) || '').trim();
+      if (saved) return saved;
+    } catch {
+      // Ignorar si localStorage no está disponible
+    }
+    return '';
+  }
+
+  function normalizeQrTargetUrl(rawUrl) {
+    let clean = String(rawUrl || '').trim();
+    if (!clean) return '';
+    if (!/^[a-zA-Z][a-zA-Z\d+\-.]*:/.test(clean) && /\./.test(clean)) {
+      clean = `https://${clean}`;
+    }
+    return clean;
+  }
+
+  function detectGitHubRepoUrl(url) {
+    const m = String(url || '').match(/^https?:\/\/(?:www\.)?github\.com\/([^/\s]+)\/([^/\s?#]+)(?:[/?#].*)?$/i);
+    if (!m) return null;
+    const owner = m[1];
+    const repo = m[2].replace(/\.git$/i, '');
+    if (['features', 'marketplace', 'topics', 'explore', 'settings', 'orgs'].includes(owner.toLowerCase())) {
+      return null;
+    }
+    return `https://${owner}.github.io/${repo}/`;
+  }
+
+  function updateQrPreview(rawUrl) {
+    if (!dom.qrCanvas || !global.OraculoQR?.renderQRCodeToCanvas) return;
+    const normalized = normalizeQrTargetUrl(rawUrl);
+    const isLocalFileOrLoopback = /^(file:|https?:\/\/(localhost|127\.0\.0\.1|\[::1\]))/i.test(normalized);
+    const ghPagesSuggestion = detectGitHubRepoUrl(normalized);
+
+    if (dom.btnFixGhPages) {
+      if (ghPagesSuggestion) {
+        dom.btnFixGhPages.classList.remove('hidden');
+        dom.btnFixGhPages.textContent = `✨ Convertir automáticamente a GitHub Pages: ${ghPagesSuggestion}`;
+        dom.btnFixGhPages.dataset.suggestedUrl = ghPagesSuggestion;
+      } else {
+        dom.btnFixGhPages.classList.add('hidden');
+        dom.btnFixGhPages.dataset.suggestedUrl = '';
+      }
+    }
+
+    if (dom.qrUrlHint) {
+      if (!normalized) {
+        dom.qrUrlHint.classList.remove('hidden');
+        dom.qrUrlHint.textContent =
+          'Estás en tu PC en modo local. Pega arriba el link público de GitHub Pages (https://tu-usuario.github.io/tu-repo/) o Vercel para que el teléfono pueda abrirlo.';
+      } else if (isLocalFileOrLoopback) {
+        dom.qrUrlHint.classList.remove('hidden');
+        dom.qrUrlHint.textContent =
+          '⚠️ "localhost" o "file://" solo existen dentro de tu PC y NO abren en el teléfono. Usa tu link HTTPS de GitHub Pages/Vercel (o la IP Wi-Fi de tu PC, ej. http://192.168.1.X:8000).';
+      } else if (ghPagesSuggestion) {
+        dom.qrUrlHint.classList.remove('hidden');
+        dom.qrUrlHint.textContent =
+          '⚠️ Ese enlace apunta al código del repositorio en GitHub, no a la web ejecutable. Usa la URL de GitHub Pages (botón azul abajo).';
+      } else {
+        dom.qrUrlHint.classList.add('hidden');
+      }
+    }
+
+    if (!normalized) {
+      const ctx = dom.qrCanvas.getContext('2d');
+      ctx.clearRect(0, 0, dom.qrCanvas.width, dom.qrCanvas.height);
+      if (dom.qrEmptyState) dom.qrEmptyState.classList.remove('hidden');
+      if (dom.qrEncodedLabel) dom.qrEncodedLabel.textContent = 'Sin enlace configurado todavía';
+      if (dom.btnDownloadQr) dom.btnDownloadQr.disabled = true;
+      return;
+    }
+
+    if (dom.qrEmptyState) dom.qrEmptyState.classList.add('hidden');
+    if (dom.btnDownloadQr) dom.btnDownloadQr.disabled = false;
+
+    try {
+      global.OraculoQR.renderQRCodeToCanvas(dom.qrCanvas, normalized, 420);
+      if (dom.qrEncodedLabel) {
+        dom.qrEncodedLabel.textContent = `QR apunta a: ${normalized}`;
+      }
+    } catch (err) {
+      console.warn('[Oráculo] Error generando QR:', err);
+      if (dom.qrEncodedLabel) dom.qrEncodedLabel.textContent = err.message || 'Enlace demasiado largo para QR';
+      showToast(err.message || 'No se pudo generar el código QR.', 'warning');
+    }
+  }
+
+  function openQrModal() {
+    if (!dom.qrModal) return;
+    const initialUrl = resolveDefaultQrUrl();
+    if (dom.inputQrUrl) {
+      dom.inputQrUrl.value = initialUrl;
+    }
+    updateQrPreview(initialUrl);
+    dom.qrModal.classList.remove('hidden');
+    dom.qrModal.classList.add('flex');
+  }
+
+  function closeQrModal() {
+    if (!dom.qrModal) return;
+    dom.qrModal.classList.add('hidden');
+    dom.qrModal.classList.remove('flex');
+  }
+
+  function downloadQrPng() {
+    if (!dom.qrCanvas) return;
+    dom.qrCanvas.toBlob(
+      (blob) => {
+        if (!blob) {
+          showToast('No se pudo exportar la imagen QR.', 'error');
+          return;
+        }
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'qr-oraculo-ciber-filosofico.png';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1500);
+        showToast('Imagen QR descargada.', 'success');
+      },
+      'image/png',
+      1.0
+    );
   }
 
   function bindEvents() {
@@ -783,6 +1056,38 @@
       btn.addEventListener('click', () => handleFormatChange(btn.dataset.modalFormat));
     });
 
+    if (dom.btnModeEsperanza) {
+      dom.btnModeEsperanza.addEventListener('click', () => {
+        state.settings.modo = 'esperanza';
+        saveSettings();
+        syncUIControls();
+        if (state.currentOracle?.modo === 'efemeride' && !state.isGenerating) {
+          renderInitialShowcase();
+        }
+      });
+    }
+
+    if (dom.btnModeEfemeride) {
+      dom.btnModeEfemeride.addEventListener('click', () => {
+        state.settings.modo = 'efemeride';
+        saveSettings();
+        syncUIControls();
+        if (state.currentOracle?.modo !== 'efemeride' && !state.isGenerating) {
+          invokeOracle({ forceLocal: false });
+        }
+      });
+    }
+
+    if (dom.ephemerisFocusSelect) {
+      dom.ephemerisFocusSelect.addEventListener('change', () => {
+        state.settings.efemerideEnfoque = dom.ephemerisFocusSelect.value;
+        saveSettings();
+        if (state.settings.modo === 'efemeride' && !state.isGenerating) {
+          invokeOracle({ forceLocal: false });
+        }
+      });
+    }
+
     dom.streamSelect.addEventListener('change', () => {
       state.settings.filtro = dom.streamSelect.value;
       saveSettings();
@@ -803,6 +1108,45 @@
     dom.settingsModal.addEventListener('click', (e) => {
       if (e.target === dom.settingsModal) closeSettingsModal();
     });
+
+    if (dom.btnOpenQr) {
+      dom.btnOpenQr.addEventListener('click', openQrModal);
+    }
+    if (dom.btnCloseQr) {
+      dom.btnCloseQr.addEventListener('click', closeQrModal);
+    }
+    if (dom.qrModal) {
+      dom.qrModal.addEventListener('click', (e) => {
+        if (e.target === dom.qrModal) closeQrModal();
+      });
+    }
+    if (dom.inputQrUrl) {
+      dom.inputQrUrl.addEventListener('input', () => {
+        const val = dom.inputQrUrl.value.trim();
+        try {
+          if (val) localStorage.setItem(STORAGE_QR_URL_KEY, val);
+        } catch {
+          // Ignorar
+        }
+        updateQrPreview(val);
+      });
+    }
+    if (dom.btnDownloadQr) {
+      dom.btnDownloadQr.addEventListener('click', downloadQrPng);
+    }
+    if (dom.btnFixGhPages) {
+      dom.btnFixGhPages.addEventListener('click', () => {
+        const suggested = dom.btnFixGhPages.dataset.suggestedUrl || '';
+        if (!suggested || !dom.inputQrUrl) return;
+        dom.inputQrUrl.value = suggested;
+        try {
+          localStorage.setItem(STORAGE_QR_URL_KEY, suggested);
+        } catch {
+          // Ignorar
+        }
+        updateQrPreview(suggested);
+      });
+    }
 
     dom.btnToggleKeyVis.addEventListener('click', () => {
       const isPass = dom.inputApiKey.type === 'password';
@@ -884,6 +1228,7 @@
       global.addEventListener('load', () => {
         navigator.serviceWorker
           .register('./sw.js')
+          .then((reg) => reg.update().catch(() => {}))
           .catch((err) => console.warn('[PWA] Error registrando Service Worker:', err));
       });
     }

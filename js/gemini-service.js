@@ -195,41 +195,58 @@
   }
 
   function buildOraclePrompt(contexto) {
-    const estiloBase =
-      'serene atmospheric nature landscape photography, luminous hopeful sky or natural light, tranquil mountain or forest or water horizon, clean soft negative space in upper-left for crisp white typography, strictly NO text, NO letters, NO words, NO watermarks';
-
     const webPulseBlock = contexto.webPulse?.summaryText
-      ? `\nPULSO REAL DE LA WEB EN VIVO (Úsalo como chispa o metáfora contemporánea conectada con la sabiduría ancestral):\n${contexto.webPulse.summaryText}\n`
+      ? `\nPULSO REAL DE LA WEB EN VIVO (Úsalo como chispa o metáfora contemporánea original conectada con el mensaje):\n${contexto.webPulse.summaryText}\n`
       : '';
 
-    return `Actúa como el Oráculo Ciber-Filosófico: un guía sabio, compasivo y luminoso cuya MISIÓN PRINCIPAL es SEMBRAR ESPERANZA REAL, consuelo lúcido y fuerza interior en quien lee el mensaje hoy, fusionando sabiduría ancestral (Kybalion, Hermetismo, Estoicismo, Numerología, Astrología e Historia) con información viva del mundo real.
+    const recentList = Array.isArray(contexto.recentMessages) ? contexto.recentMessages : [];
+    const antiRepeatBlock = recentList.length
+      ? `\nMENSAJES YA MOSTRADOS (PROHIBIDO repetir ideas, estructuras o palabras centrales):\n${recentList
+          .slice(0, 6)
+          .map((m, i) => `${i + 1}. "${m.gancho}" — "${m.frase}"`)
+          .join('\n')}\n`
+      : '';
 
-FECHA ACTUAL Y NUMEROLOGÍA DEL DÍA:
-- Fecha: ${contexto.fechaTexto}
-- Vibración Numerológica del Día: ${contexto.numerologiaDia.numero} (${contexto.numerologiaDia.titulo})
-- Esencia del Número: ${contexto.numerologiaDia.esencia}
-- Consejo Numerológico: ${contexto.numerologiaDia.consejo}
+    const enfoques = [
+      'la paciencia silenciosa de las raíces bajo tierra antes de brotar en primavera',
+      'el coraje sereno de soltar un peso antiguo para caminar liviano',
+      'el arte japonés del kintsugi: embellecer las grietas con oro vivo',
+      'el oficio de un faro que no persigue barcos, solo sostiene su luz firme',
+      'la música que nace precisamente de los silencios entre notas',
+      'un navegante guiándose por estrellas fijas cuando cambia la marea',
+      'el descanso fértil del invierno que prepara las flores que nadie ve aún',
+      'construir hogar dentro de la propia respiración en medio de la prisa',
+      'la precisión serena del relojero que ordena una pieza a la vez',
+      'el río que rodea la roca sin odio hasta pulirla con paciencia',
+      'la alegría discreta de empezar hoy como un aprendiz libre de ayer',
+      'la gratitud lúcida por lo que permanece en pie después del cambio',
+      'el puente invisible que se tiende cuando alguien decide confiar un día más',
+      'transformar la duda en curiosidad y el miedo en atención despierta',
+      'un bosque que vuelve a brotar más fuerte tras el fuego',
+      'la calma profunda del fondo del mar aunque en la superficie haya viento'
+    ];
+    const enfoqueRandom = enfoques[Math.floor(Math.random() * enfoques.length)];
+    const targetAtm = VALID_ATMOSPHERES.includes(contexto.targetAtmosphere)
+      ? contexto.targetAtmosphere
+      : VALID_ATMOSPHERES[Math.floor(Math.random() * VALID_ATMOSPHERES.length)];
 
-CORRIENTES SELECCIONADAS PARA ESTA INVOCACIÓN (Filtro: ${contexto.filtroLabel}):
-${contexto.resumenCorrientes}${webPulseBlock}
+    return `Eres el Oráculo Ciber-Filosófico. Tu misión es dar ESPERANZA REAL, claridad y fuerza serena fusionando sabiduría ancestral (${contexto.filtroLabel}) con la vida cotidiana actual.
 
-INSTRUCCIONES ESTRICTAS DE SALIDA (JSON):
-1. "gancho": Un título corto, humano y psicológico en MAYÚSCULAS que abrace a alguien que está pasando un momento difícil y detenga el scroll (entre 4 y 9 palabras, ej: "PARA CUANDO CREAS QUE NO PUEDES MÁS" o "CUANDO LA NOCHE PAREZCA DEMASIADO LARGA").
-2. "frase": El mensaje central de ESPERANZA y sabiduría (entre 15 y 28 palabras exactas). Debe sentirse cálido, honesto, profundo y restaurador (sin toxicidad positiva vacía, sino esperanza real anclada en filosofía).
-3. "palabras_clave": Array de 2 o 3 palabras EXACTAS tal como aparecen escritas en "frase" que transmitan luz, fuerza o esperanza y deban resaltarse en color vibrante.
-4. "atmosfera": Elige exactamente UNA palabra entre ["amanecer", "aurora", "fortaleza", "renacimiento", "serenidad", "cosmos"] que mejor represente el paisaje emocional de tu "frase":
-   - "amanecer": nuevos comienzos, salida tras la oscuridad, primer rayo de luz.
-   - "aurora": sanación, esperanza suave, flujo, alivio espiritual.
-   - "fortaleza": resiliencia, valentía, fuego interior, sostenerse en pie.
-   - "renacimiento": kintsugi, heridas convertidas en oro y belleza, volver a empezar.
-   - "serenidad": calma mental, silencio protector, paz en medio del ruido.
-   - "cosmos": propósito mayor, destino, estrellas que guían en la noche.
-5. "prompt_arte": Descripción poética y visual en INGLÉS de un FONDO ESCÉNICO ESPERANZADOR que ilustre literalmente la metáfora de "frase" y su "atmosfera" (ej. golden sunrise breaking over misty mountains for a calm wanderer, golden kintsugi light glowing through dark obsidian fractures, warm lantern glowing beside calm night waters, emerald aurora over tranquil horizon). Integra este estilo: "${estiloBase}". PROHIBIDO incluir texto, letras o palabras.
-6. "caption": Texto completo listo para publicar en redes sociales en español:
-   - Primera línea: gancho empático con emoji luminoso.
-   - Desarrollo filosófico esperanzador (2 a 3 párrafos breves conectando la frase con las corrientes invocadas y la energía numérica ${contexto.numerologiaDia.numero} de hoy).
-   - Pregunta cálida o llamado a la acción para acompañar a la comunidad en comentarios.
-   - Bloque final con 6 a 8 hashtags relevantes (#Esperanza #Estoicismo #Kybalion #SabiduriaAncestral #Resiliencia #Numerologia #LuzInterior).`;
+SEMILLA ÚNICA: #${Date.now()}-${Math.floor(Math.random() * 99999)}
+ATMÓSFERA EMOCIONAL DE ESTA TARJETA: "${targetAtm}"
+METÁFORA CENTRAL OBLIGATORIA PARA ESTA VEZ: ${enfoqueRandom}
+
+CONTEXTO DE HOY (${contexto.fechaTexto}):
+- Vibración ${contexto.numerologiaDia.numero} (${contexto.numerologiaDia.titulo}): ${contexto.numerologiaDia.consejo}
+- Corrientes de apoyo:
+${contexto.resumenCorrientes}${webPulseBlock}${antiRepeatBlock}
+
+DEVUELVE SOLO JSON VÁLIDO CON ESTOS 5 CAMPOS:
+1. "gancho": Título psicológico en MAYÚSCULAS (4 a 9 palabras), directo al corazón, sin repetir fórmulas previas.
+2. "frase": Mensaje ORIGINAL de 15 a 26 palabras anclado en la METÁFORA CENTRAL elegida. Evita frases gastadas ("noche más larga", "tormenta pasará", "luz interior").
+3. "palabras_clave": 2 o 3 palabras EXACTAS de "frase" para resaltar en dorado.
+4. "atmosfera": Usa exactamente "${targetAtm}".
+5. "caption": Texto breve en español listo para redes (gancho con emoji + 2 párrafos concretos conectando la metáfora con la sabiduría de hoy + pregunta para comentar + 5 hashtags variados).`;
   }
 
   function normalizeOraclePayload(raw) {
@@ -262,23 +279,17 @@ INSTRUCCIONES ESTRICTAS DE SALIDA (JSON):
     return { gancho, frase, palabras_clave: palabras, atmosfera, prompt_arte, caption };
   }
 
-  async function generateOracleText(contexto, tema = 'ciber') {
+  async function requestGeminiJsonPayload(prompt, temperature = 1.1) {
     const apiKey = getApiKey();
     if (!apiKey) {
       throw new Error('NO_API_KEY');
     }
 
-    const prompt = buildOraclePrompt(contexto, tema);
-    const body = {
-      contents: [
-        {
-          role: 'user',
-          parts: [{ text: prompt }]
-        }
-      ],
-      generationConfig: {
-        temperature: 0.94,
-        topP: 0.95,
+    const buildBodyForModel = (modelName, includeThinking = true) => {
+      const generationConfig = {
+        temperature,
+        topP: 0.96,
+        maxOutputTokens: 700,
         responseMimeType: 'application/json',
         responseSchema: {
           type: 'OBJECT',
@@ -287,21 +298,52 @@ INSTRUCCIONES ESTRICTAS DE SALIDA (JSON):
             frase: { type: 'STRING' },
             palabras_clave: { type: 'ARRAY', items: { type: 'STRING' } },
             atmosfera: { type: 'STRING', enum: VALID_ATMOSPHERES },
-            prompt_arte: { type: 'STRING' },
             caption: { type: 'STRING' }
           },
-          required: ['gancho', 'frase', 'palabras_clave', 'atmosfera', 'prompt_arte', 'caption']
+          required: ['gancho', 'frase', 'palabras_clave', 'atmosfera', 'caption']
+        }
+      };
+
+      if (includeThinking) {
+        if (/^gemini-3/i.test(modelName)) {
+          generationConfig.thinkingConfig = { thinkingLevel: 'MINIMAL' };
+        } else if (/^gemini-2\.5/i.test(modelName)) {
+          generationConfig.thinkingConfig = { thinkingBudget: 0 };
         }
       }
+
+      return {
+        contents: [
+          {
+            role: 'user',
+            parts: [{ text: prompt }]
+          }
+        ],
+        generationConfig
+      };
     };
 
-    const callModel = async (modelName) => {
+    const callModel = async (modelName, includeThinking = true) => {
       const endpoint = `${GEMINI_BASE_URL}/${modelName}:generateContent?key=${encodeURIComponent(apiKey)}`;
-      return fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      });
+      const res = await fetchWithTimeout(
+        endpoint,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(buildBodyForModel(modelName, includeThinking))
+        },
+        15000
+      );
+
+      // Si el modelo concreto rechaza thinkingConfig con 400, reintentar sin él de inmediato
+      if (res.status === 400 && includeThinking) {
+        const cloneData = await res.clone().json().catch(() => ({}));
+        const msg400 = cloneData?.error?.message || '';
+        if (/thinking/i.test(msg400)) {
+          return callModel(modelName, false);
+        }
+      }
+      return res;
     };
 
     let modelToUse = getActiveTextModel();
@@ -310,8 +352,17 @@ INSTRUCCIONES ESTRICTAS DE SALIDA (JSON):
     // Si el modelo fue retirado o no está disponible para nuevos usuarios, autodescubrir el modelo activo
     if (!response.ok) {
       const errData = await response.json().catch(() => ({}));
-      const msg = errData?.error?.message || `Error HTTP ${response.status} al consultar Gemini`;
-      if (response.status === 404 || /no longer available|not found|deprecated/i.test(msg)) {
+      const rawMsg = errData?.error?.message || `Error HTTP ${response.status} al consultar Gemini`;
+      const isQuotaErr =
+        response.status === 429 ||
+        /quota|RESOURCE_EXHAUSTED|rate.?limit|billing|credit|exceeded/i.test(rawMsg);
+      if (isQuotaErr) {
+        const qErr = new Error(`QUOTA_EXCEEDED: ${rawMsg}`);
+        qErr.code = 'QUOTA_EXCEEDED';
+        qErr.status = response.status;
+        throw qErr;
+      }
+      if (response.status === 404 || /no longer available|not found|deprecated/i.test(rawMsg)) {
         try {
           discoveredCache.ready = false;
           const info = await discoverAvailableModels(apiKey);
@@ -320,16 +371,23 @@ INSTRUCCIONES ESTRICTAS DE SALIDA (JSON):
             response = await callModel(modelToUse);
             if (!response.ok) {
               const retryErr = await response.json().catch(() => ({}));
-              throw new Error(retryErr?.error?.message || `Error HTTP ${response.status} en ${modelToUse}`);
+              const retryMsg = retryErr?.error?.message || `Error HTTP ${response.status} en ${modelToUse}`;
+              const retryIsQuota =
+                response.status === 429 ||
+                /quota|RESOURCE_EXHAUSTED|rate.?limit|billing|credit|exceeded/i.test(retryMsg);
+              const e = new Error(retryIsQuota ? `QUOTA_EXCEEDED: ${retryMsg}` : retryMsg);
+              if (retryIsQuota) e.code = 'QUOTA_EXCEEDED';
+              throw e;
             }
           } else {
-            throw new Error(msg);
+            throw new Error(rawMsg);
           }
         } catch (discoveryErr) {
-          throw new Error(discoveryErr.message || msg);
+          if (discoveryErr.code === 'QUOTA_EXCEEDED') throw discoveryErr;
+          throw new Error(discoveryErr.message || rawMsg);
         }
       } else {
-        throw new Error(msg);
+        throw new Error(rawMsg);
       }
     }
 
@@ -352,6 +410,60 @@ INSTRUCCIONES ESTRICTAS DE SALIDA (JSON):
     }
 
     return normalizeOraclePayload(parsed);
+  }
+
+  async function generateOracleText(contexto) {
+    const prompt = buildOraclePrompt(contexto);
+    return requestGeminiJsonPayload(prompt, 1.1);
+  }
+
+  function buildEphemerisPrompt(ephemerisItem, contexto) {
+    const targetAtm = VALID_ATMOSPHERES.includes(contexto.targetAtmosphere)
+      ? contexto.targetAtmosphere
+      : 'amanecer';
+    const recentList = Array.isArray(contexto.recentMessages) ? contexto.recentMessages : [];
+    const antiRepeat = recentList.length
+      ? `\nEVITA REPETIR ESTAS FRASES PREVIAS:\n${recentList
+          .slice(0, 4)
+          .map((m) => `- "${m.gancho}"`)
+          .join('\n')}`
+      : '';
+
+    const isChile = ephemerisItem?.kind === 'chile' || contexto.efemerideEnfoque === 'chile';
+    const kindLabel = isChile
+      ? `EFEMÉRIDE DE CHILE${ephemerisItem?.year ? ` (${ephemerisItem.year})` : ''}`
+      : ephemerisItem?.kind === 'mundial'
+        ? 'DÍA INTERNACIONAL / CONMEMORACIÓN MUNDIAL'
+        : `HITO HISTÓRICO${ephemerisItem?.year ? ` (${ephemerisItem.year})` : ''}`;
+
+    const hookHint = isChile
+      ? `"CHILE · TAL DÍA COMO HOY${ephemerisItem?.year ? ` (${ephemerisItem.year})` : ''}" o nombre breve de la efeméride chilena`
+      : `"TAL DÍA COMO HOY · ${ephemerisItem?.year || 'EFEMÉRIDE'}" o el nombre breve del Día Mundial`;
+    const hashtagsHint = isChile
+      ? '#EfemeridesDeChile #Chile #HistoriaDeChile #TalDiaComoHoy #CulturaChilena'
+      : '#EfemeridesDeHoy #TalDiaComoHoy #HistoriaMundial #ConcienciaGlobal #Cultura';
+
+    return `Eres un cronista cultural y humanista. Transforma este hecho REAL de hoy (${contexto.fechaTexto}) en una tarjeta visual elegante, veraz e inspiradora para redes sociales.
+
+DATO VERIFICADO DE WIKIPEDIA (${kindLabel}):
+- Hecho: ${ephemerisItem?.text || ''}
+${ephemerisItem?.extract ? `- Contexto adicional: ${ephemerisItem.extract}` : ''}${antiRepeat}
+
+DEVUELVE SOLO JSON VÁLIDO:
+1. "gancho": Encabezado corto en MAYÚSCULAS (4 a 8 palabras, ej. ${hookHint}).
+2. "frase": Explicación clara del acontecimiento real + 1 idea breve de conciencia o valor humano para hoy (entre 16 y 26 palabras exactas, español natural, sin inventar datos).
+3. "palabras_clave": 2 o 3 palabras EXACTAS de "frase" (ej. año, concepto clave) para resaltar en dorado.
+4. "atmosfera": Usa exactamente "${targetAtm}".
+5. "caption": Publicación completa en español para Instagram/Facebook/TikTok:
+   - Encabezado con emoji (${isChile ? '🇨🇱 o 📅' : '📅 o 🌍'}) y el título del día/hecho.
+   - 2 párrafos breves contando por qué este hecho o día importa hoy.
+   - Pregunta breve para conversar en comentarios.
+   - 5 hashtags relevantes (${hashtagsHint}).`;
+  }
+
+  async function generateEphemerisCard(ephemerisItem, contexto) {
+    const prompt = buildEphemerisPrompt(ephemerisItem, contexto);
+    return requestGeminiJsonPayload(prompt, 0.75);
   }
 
   async function generateOracleArt(promptArte, aspectRatio = '3:4') {
@@ -526,10 +638,50 @@ INSTRUCCIONES ESTRICTAS DE SALIDA (JSON):
         palabras_clave: ['cielo', 'estrellas', 'camino'],
         atmosfera: 'cosmos',
         caption_cuerpo: `En el tejido del tiempo nada de lo que amaste o luchaste se pierde. La energía ${num.numero} (${num.esencia}) alinea hoy tus pasos con un propósito mayor.`
+      }),
+      () => ({
+        gancho: 'PARA CUANDO CREAS QUE AVANZAS MUY LENTO',
+        frase:
+          'Las raíces más firmes crecen bajo tierra sin hacer ruido; lo que hoy parece pausa está preparando tu mejor cosecha.',
+        palabras_clave: ['raíces', 'firme', 'cosecha'],
+        atmosfera: 'aurora',
+        caption_cuerpo: `No midas tu progreso por la prisa del mundo. ${estoico ? `${estoico.autor}: "${estoico.maxima}".` : 'Cada paso constante construye futuro.'}`
+      }),
+      () => ({
+        gancho: 'SI HOY TE CUESTA SOLTAR LO QUE YA CAMBIÓ',
+        frase:
+          'Como el río que abraza la curva del valle, tu alma sabe encontrar cauce nuevo sin perder su esencia viva.',
+        palabras_clave: ['río', 'cauce', 'esencia'],
+        atmosfera: 'serenidad',
+        caption_cuerpo: `${ley ? `Principio del ${ley.nombre}: ${ley.aplicacion_practica}` : 'Fluir con lucidez también es fortaleza.'}`
+      }),
+      () => ({
+        gancho: 'UN RECORDATORIO PARA NO EXIGIRTE PERFECCIÓN',
+        frase:
+          'No necesitas tener todas las respuestas esta mañana; basta un paso honesto hoy para que el horizonte se abra mañana.',
+        palabras_clave: ['honesto', 'horizonte', 'mañana'],
+        atmosfera: 'amanecer',
+        caption_cuerpo: `Hoy la vibración ${num.numero} (${num.titulo}) celebra el valor de avanzar con humildad y presencia.`
+      }),
+      () => ({
+        gancho: 'CUANDO EL CANSANCIO NUBLE TU PROPÓSITO',
+        frase:
+          'Descansar no es rendirse: incluso los árboles más antiguos guardan savia en invierno para volver a florecer con más fuerza.',
+        palabras_clave: ['descansar', 'florecer', 'fuerza'],
+        atmosfera: 'fortaleza',
+        caption_cuerpo: `${historia ? `En la historia, ${historia.personaje_o_evento} nos enseña: ${historia.aplicacion}` : 'Cuidar tu energía también es estrategia.'}`
       })
     ];
 
-    const picked = plantillas[Math.floor(Math.random() * plantillas.length)]();
+    const recentGanchos = new Set(
+      (contexto.recentMessages || []).map((m) => String(m.gancho || '').toUpperCase().trim())
+    );
+    const freshTemplates = plantillas.filter((fn) => {
+      const sample = fn();
+      return !recentGanchos.has(String(sample.gancho || '').toUpperCase().trim());
+    });
+    const pool = freshTemplates.length ? freshTemplates : plantillas;
+    const picked = pool[Math.floor(Math.random() * pool.length)]();
     const webNote = contexto.webPulse?.summaryText
       ? `\n\n🌐 Pulso del mundo hoy: ${contexto.webPulse.summaryText.split('\n')[0]}`
       : '';
@@ -541,6 +693,47 @@ INSTRUCCIONES ESTRICTAS DE SALIDA (JSON):
       palabras_clave: picked.palabras_clave,
       atmosfera: picked.atmosfera,
       prompt_arte: `Hopeful ${picked.atmosfera} atmospheric background`,
+      caption
+    };
+  }
+
+  function buildLocalEphemerisFallback(ephemerisItem, contexto) {
+    const rawText = String(ephemerisItem?.text || '').replace(/\s+/g, ' ').trim();
+    const shortFrase = rawText.length > 175 ? `${rawText.slice(0, 172).replace(/\s+\S*$/, '')}...` : rawText;
+    const isChile = ephemerisItem?.kind === 'chile' || contexto.efemerideEnfoque === 'chile';
+    const isWorldDay = ephemerisItem?.kind === 'mundial';
+    const gancho = isChile
+      ? `CHILE · ${ephemerisItem?.year ? `TAL DÍA COMO HOY (${ephemerisItem.year})` : `EFEMÉRIDE ${contexto.fecha.getDate()} ${contexto.fecha.toLocaleDateString('es-ES', { month: 'short' }).toUpperCase()}`}`
+      : isWorldDay
+        ? `EFEMÉRIDE MUNDIAL · ${contexto.fecha.getDate()} ${contexto.fecha
+            .toLocaleDateString('es-ES', { month: 'short' })
+            .toUpperCase()}`
+        : `TAL DÍA COMO HOY${ephemerisItem?.year ? ` · ${ephemerisItem.year}` : ''}`;
+
+    const words = shortFrase
+      .split(/\s+/)
+      .map((w) => w.replace(/^[^A-Za-zÁÉÍÓÚáéíóúÑñ0-9]+|[^A-Za-zÁÉÍÓÚáéíóúÑñ0-9]+$/g, ''))
+      .filter((w) => w.length >= 4);
+    const keywords = [];
+    if (ephemerisItem?.year) keywords.push(String(ephemerisItem.year));
+    for (const w of words) {
+      if (keywords.length >= 3) break;
+      if (!keywords.includes(w)) keywords.push(w);
+    }
+
+    const atmosfera = contexto.targetAtmosphere || 'aurora';
+    const extraContext = ephemerisItem?.extract ? `\n\n📖 Contexto: ${ephemerisItem.extract}` : '';
+    const sourceLine = ephemerisItem?.sourceUrl ? `\n🔗 Fuente: ${ephemerisItem.sourceUrl}` : '';
+    const caption = isChile
+      ? `🇨🇱 ${gancho} (${contexto.fechaTexto})\n\n${rawText}${extraContext}${sourceLine}\n\n🏔️ Recordar la historia y el pulso vivo de Chile nos invita a construir un mejor presente juntos. ¿Conocías este hecho?\n\n#EfemeridesDeChile #Chile #HistoriaDeChile #TalDiaComoHoy #CulturaChilena`
+      : `📅 ${gancho} (${contexto.fechaTexto})\n\n${rawText}${extraContext}${sourceLine}\n\n🌍 Cada fecha guarda memoria colectiva que nos invita a mirar el presente con mayor conciencia. ¿Conocías este dato de hoy?\n\n#EfemeridesDeHoy #TalDiaComoHoy #CulturaGeneral #HistoriaMundial #ConcienciaGlobal`;
+
+    return {
+      gancho,
+      frase: shortFrase,
+      palabras_clave: keywords.slice(0, 3),
+      atmosfera,
+      prompt_arte: `Atmospheric ${atmosfera} world heritage background`,
       caption
     };
   }
@@ -557,7 +750,9 @@ INSTRUCCIONES ESTRICTAS DE SALIDA (JSON):
     testApiKey,
     getActiveTextModel,
     generateOracleText,
+    generateEphemerisCard,
     generateOracleArt,
-    buildLocalOracleFallback
+    buildLocalOracleFallback,
+    buildLocalEphemerisFallback
   };
 })(window);
