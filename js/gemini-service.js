@@ -230,33 +230,135 @@
       ? contexto.targetAtmosphere
       : VALID_ATMOSPHERES[Math.floor(Math.random() * VALID_ATMOSPHERES.length)];
 
+    const taoObj = contexto.corrientesObj?.taoismo;
+    const isTaoMode = contexto.filtro === 'taoismo' && (taoObj || contexto.webPulse?.taoQuote);
+    const liveTao = isTaoMode ? contexto.webPulse?.taoQuote : null;
+    const isStoicMode = contexto.filtro === 'estoicismo';
+    const isFiloMode = contexto.filtro === 'filosofia';
+    const isKybalionMode = contexto.filtro === 'kybalion';
+    const isSabHumMode = contexto.filtro === 'sabiduria_humana';
+    const recentFrasesSet = new Set(
+      recentList.map((m) => String(m.frase || '').toLowerCase().slice(0, 48))
+    );
+    const pickLiveIfFresh = (live) =>
+      live &&
+      !recentFrasesSet.has(String(live.maxima || '').toLowerCase().slice(0, 48)) &&
+      Math.random() < 0.4;
+
+    const liveQuote = isStoicMode
+      ? pickLiveIfFresh(contexto.webPulse?.stoicQuote)
+      : isFiloMode
+        ? pickLiveIfFresh(contexto.webPulse?.filosofiaQuote)
+        : isKybalionMode
+          ? pickLiveIfFresh(contexto.webPulse?.kybalionQuote)
+          : null;
+    const philosopherObj = isStoicMode
+      ? liveQuote || contexto.corrientesObj?.estoicismo
+      : isFiloMode
+        ? liveQuote || contexto.corrientesObj?.filosofia
+        : isKybalionMode
+          ? liveQuote || contexto.corrientesObj?.kybalionMaestro
+          : isSabHumMode
+            ? contexto.corrientesObj?.sabiduriaHumana
+            : null;
+    const isAuthorQuoteMode = (isStoicMode || isFiloMode || isKybalionMode || isSabHumMode) && Boolean(philosopherObj);
+
+    const taoBlock = isTaoMode
+      ? `\nENFOQUE ESPECIAL TAOÍSTA REAL (Laozi / Zhuangzi / Lie Yukou / Wang Chongyang / Maestros Celestiales Tianshi):\n${
+          liveTao
+            ? `- Cita real en vivo (${liveTao.autor} · ${liveTao.obra}): "${liveTao.maxima}"\n`
+            : ''
+        }${
+          taoObj
+            ? `- Maestro / Tradición: ${taoObj.maestro}\n- Historia corta (${taoObj.titulo}): ${taoObj.historia}\n- Esperanza que nos deja hoy: ${taoObj.ensenanza}\n`
+            : ''
+        }- Propósito: Devolver calma, esperanza real y sentido humano a personas saturadas por el ruido digital y redes como TikTok.\n`
+      : '';
+
+    const authorLabel = isStoicMode
+      ? 'ESTOICISMO REAL'
+      : isKybalionMode
+        ? 'MAESTROS DE LAS LEYES UNIVERSALES'
+        : isSabHumMode
+          ? 'SABIDURÍA HUMANA SIN DOGMAS (PARÁBOLAS DE JESÚS, ECLESIASTÉS Y PROVERBIOS — LENGUAJE CERCANO NO RELIGIOSO)'
+          : 'FILOSOFÍA UNIVERSAL REAL';
+    const authorBlock = isAuthorQuoteMode
+      ? `\nENFOQUE ESTRICTO DE ${authorLabel} (${
+          isSabHumMode
+            ? 'USA LENGUAJE HUMANO Y CERCANO PARA CREYENTES Y NO CREYENTES, SIN SERMONES, SIN DOGMAS NI ETIQUETAS RELIGIOSAS; ENFÓCATE EN LO QUE HACES VUELVE, EMPATÍA, PERDÓN Y PAZ'
+            : 'PROHIBIDO INVENTAR CITAS NI USAR METÁFORAS AJENAS'
+        }):\n- Referencia: ${philosopherObj.autor} (${philosopherObj.obra})\n- Enseñanza / Máxima: "${philosopherObj.maxima}"\n${philosopherObj.historia ? `- Relato / Sentido humano: ${philosopherObj.historia}\n` : ''}${philosopherObj.ensenanza ? `- Enseñanza práctica: ${philosopherObj.ensenanza}\n` : ''}${philosopherObj.aplicacion_practica ? `- Aplicación práctica: ${philosopherObj.aplicacion_practica}\n` : ''}`
+      : '';
+
+    const centralFocus = isAuthorQuoteMode
+      ? `${philosopherObj.autor} (${philosopherObj.obra}): "${philosopherObj.maxima}"`
+      : isTaoMode
+        ? liveTao
+          ? `${liveTao.autor} (${liveTao.obra}): "${liveTao.maxima}"`
+          : `${taoObj.maestro} — ${taoObj.titulo}: ${taoObj.ensenanza}`
+        : enfoqueRandom;
+
+    const dailyPulseLine = isAuthorQuoteMode || isTaoMode
+      ? ''
+      : `- Vibración ${contexto.numerologiaDia.numero} (${contexto.numerologiaDia.titulo}): ${contexto.numerologiaDia.consejo}\n`;
+    const strictIsolationRule =
+      isAuthorQuoteMode || isTaoMode
+        ? `\nREGLA ESTRICTA DE ENFOQUE: Céntrate 100% en "${contexto.filtroLabel}" y en la enseñanza dada arriba. PROHIBIDO mezclar otros títulos, corrientes ajenas, autores de otras escuelas o numerología.\n`
+        : '';
+
     return `Eres el Oráculo Ciber-Filosófico. Tu misión es dar ESPERANZA REAL, claridad y fuerza serena fusionando sabiduría ancestral (${contexto.filtroLabel}) con la vida cotidiana actual.
 
 SEMILLA ÚNICA: #${Date.now()}-${Math.floor(Math.random() * 99999)}
 ATMÓSFERA EMOCIONAL DE ESTA TARJETA: "${targetAtm}"
-METÁFORA CENTRAL OBLIGATORIA PARA ESTA VEZ: ${enfoqueRandom}
+METÁFORA / CITA CENTRAL OBLIGATORIA PARA ESTA VEZ: ${centralFocus}
 
 CONTEXTO DE HOY (${contexto.fechaTexto}):
-- Vibración ${contexto.numerologiaDia.numero} (${contexto.numerologiaDia.titulo}): ${contexto.numerologiaDia.consejo}
-- Corrientes de apoyo:
-${contexto.resumenCorrientes}${webPulseBlock}${antiRepeatBlock}
+${dailyPulseLine}- Corriente seleccionada (${contexto.filtroLabel}):
+${contexto.resumenCorrientes}${taoBlock}${authorBlock}${strictIsolationRule}${webPulseBlock}${antiRepeatBlock}
 
 DEVUELVE SOLO JSON VÁLIDO CON ESTOS 5 CAMPOS:
-1. "gancho": Título psicológico en MAYÚSCULAS (4 a 9 palabras), directo al corazón, sin repetir fórmulas previas.
-2. "frase": Mensaje ORIGINAL de 15 a 26 palabras anclado en la METÁFORA CENTRAL elegida. Evita frases gastadas ("noche más larga", "tormenta pasará", "luz interior").
+1. "gancho": ${
+      isAuthorQuoteMode
+        ? isSabHumMode
+          ? `Encabezado breve humano en MAYÚSCULAS (4 a 8 palabras, ej. "${philosopherObj.gancho_sugerido || 'LO QUE PONES EN EL MUNDO VUELVE A TI'}") sin tono religioso`
+          : `Encabezado en MAYÚSCULAS citando al autor y su obra (ej. "${philosopherObj.autor.toUpperCase()} · ${philosopherObj.obra.toUpperCase().slice(0, 28)}")`
+        : isTaoMode
+          ? `Encabezado en MAYÚSCULAS nombrando al maestro taoísta (${(liveTao?.autor || taoObj?.maestro || 'LAOZI').toUpperCase()}) y una frase breve de gancho para detener el scroll`
+          : 'Título psicológico en MAYÚSCULAS (4 a 9 palabras), directo al corazón, sin repetir fórmulas previas'
+    }.
+2. "frase": ${
+      isAuthorQuoteMode
+        ? isSabHumMode
+          ? 'Enseñanza humana clara y cálida de 15 a 24 palabras en UNA o DOS oraciones COMPLETAS terminadas en punto final (sin lenguaje religioso ni dogmas; habla como ley de vida y empatía cotidiana)'
+          : `Cita fiel o síntesis exacta de la enseñanza real de ${philosopherObj.autor} en UNA o DOS oraciones COMPLETAS terminadas en punto final (14 a 25 palabras, máximo 180 caracteres, sin frases cortadas)`
+        : `Mensaje ORIGINAL de 15 a 24 palabras en UNA o DOS oraciones COMPLETAS terminadas en punto final (sin cortar ideas ni usar puntos suspensivos), anclado en la ${isTaoMode ? 'enseñanza real del maestro taoísta elegido, trayendo esperanza frente al ruido digital actual' : 'METÁFORA CENTRAL elegida'}. Evita frases gastadas ("noche más larga", "tormenta pasará", "luz interior")`
+    }.
 3. "palabras_clave": 2 o 3 palabras EXACTAS de "frase" para resaltar en dorado.
 4. "atmosfera": Usa exactamente "${targetAtm}".
-5. "caption": Texto breve en español listo para redes (gancho con emoji + 2 párrafos concretos conectando la metáfora con la sabiduría de hoy + pregunta para comentar + 5 hashtags variados).`;
+5. "caption": Texto breve en español listo para redes (${
+      isAuthorQuoteMode
+        ? isSabHumMode
+          ? `gancho con emoji 🕊️ + breve parábola o reflexión humana sin tono confesional ni dogmas + 1 gesto concreto para ser mejor persona hoy + pregunta cercana + 5 hashtags (#SabiduriaHumana #Humanidad #Empatia #Esperanza #VidaConsciente)`
+          : `gancho con emoji ${isStoicMode ? '🏛️' : isKybalionMode ? '🔺' : '🦉'} + cita literal "${philosopherObj.maxima}" atribuida a ${philosopherObj.autor} (${philosopherObj.obra}) + 2 párrafos concretos para volver a la humanidad más humana hoy + pregunta para comentar + 5 hashtags (${isStoicMode ? '#Estoicismo #Humanidad #MarcoAurelio #Seneca #Epicteto' : isKybalionMode ? '#LeyesUniversales #Kybalion #HermesTrismegisto #NevilleGoddard #Conciencia' : '#Filosofia #Sabiduria #Humanidad #PensamientoCritico #Esperanza'})`
+        : isTaoMode
+          ? 'gancho con emoji ☯️ + nombra al maestro (Laozi / Zhuangzi / Liezi / Wang Chongyang / Maestros Celestiales) + narra su historia corta o frase real + conecta esa calma con quienes hoy solo ven prisa en redes/TikTok + pregunta para comentar + 5 hashtags (#Taoismo #Laozi #Zhuangzi #Liezi #EsperanzaReal)'
+          : 'gancho con emoji + 2 párrafos concretos conectando la metáfora con la sabiduría de hoy + pregunta para comentar + 5 hashtags variados'
+    }).`;
   }
 
   function normalizeOraclePayload(raw) {
     const gancho = String(raw.gancho || 'PARA CUANDO SIENTAS QUE EL DÍA PESA DEMASIADO')
       .trim()
       .toUpperCase();
-    const frase = String(
+    let frase = String(
       raw.frase ||
         'Incluso la noche más larga obedece al ritmo del universo y prepara en silencio la claridad de tu próximo amanecer.'
-    ).trim();
+    )
+      .replace(/\s*\.\.\.\s*$/, '')
+      .trim();
+    if (frase && !/[.!?]$/.test(frase)) {
+      frase = `${frase.replace(/[,\s;:\-]+$/, '')}.`;
+    }
 
     let palabras = Array.isArray(raw.palabras_clave) ? raw.palabras_clave : [];
     palabras = palabras
@@ -451,7 +553,7 @@ ${ephemerisItem?.extract ? `- Contexto adicional: ${ephemerisItem.extract}` : ''
 
 DEVUELVE SOLO JSON VÁLIDO:
 1. "gancho": Encabezado corto en MAYÚSCULAS (4 a 8 palabras, ej. ${hookHint}).
-2. "frase": Explicación clara del acontecimiento real + 1 idea breve de conciencia o valor humano para hoy (entre 16 y 26 palabras exactas, español natural, sin inventar datos).
+2. "frase": Explicación clara del acontecimiento real + 1 idea breve de valor humano para hoy en UNA o DOS ORACIONES COMPLETAS terminadas en punto final (15 a 24 palabras exactas, máximo 175 caracteres, sin frases cortadas ni puntos suspensivos).
 3. "palabras_clave": 2 o 3 palabras EXACTAS de "frase" (ej. año, concepto clave) para resaltar en dorado.
 4. "atmosfera": Usa exactamente "${targetAtm}".
 5. "caption": Publicación completa en español para Instagram/Facebook/TikTok:
@@ -589,6 +691,238 @@ DEVUELVE SOLO JSON VÁLIDO:
     const estoico = contexto.corrientesObj?.estoicismo;
     const historia = contexto.corrientesObj?.historia;
     const signo = contexto.corrientesObj?.astrologia;
+    const taoPool = Array.isArray(contexto.corrientesObj?.taoismoPool)
+      ? contexto.corrientesObj.taoismoPool
+      : contexto.corrientesObj?.taoismo
+        ? [contexto.corrientesObj.taoismo]
+        : [];
+
+    const stoicPool = Array.isArray(contexto.corrientesObj?.estoicismoPool)
+      ? contexto.corrientesObj.estoicismoPool
+      : estoico
+        ? [estoico]
+        : [];
+    const filosofiaObj = contexto.corrientesObj?.filosofia;
+    const filosofiaPool = Array.isArray(contexto.corrientesObj?.filosofiaPool)
+      ? contexto.corrientesObj.filosofiaPool
+      : filosofiaObj
+        ? [filosofiaObj]
+        : [];
+    const kybalionPool = Array.isArray(contexto.corrientesObj?.kybalionPool)
+      ? contexto.corrientesObj.kybalionPool
+      : ley
+        ? [ley]
+        : [];
+
+    const recentGanchos = new Set(
+      (contexto.recentMessages || []).map((m) => String(m.gancho || '').toUpperCase().trim())
+    );
+    const recentFrases = new Set(
+      (contexto.recentMessages || []).map((m) => String(m.frase || '').toLowerCase().slice(0, 48))
+    );
+
+    const lastHook = String(contexto.recentMessages?.[0]?.gancho || '').toUpperCase();
+    const buildAuthorQuoteFallback = ({ liveQuote, pool, defaultAtm, emoji, label, hashtags }) => {
+      const fresh = pool.filter(
+        (s) => !recentFrases.has(String(s.maxima || '').toLowerCase().slice(0, 48))
+      );
+      const nonSameAuthor = fresh.filter(
+        (s) => !lastHook || !lastHook.includes(String(s.autor || '').toUpperCase())
+      );
+      const candidates = nonSameAuthor.length ? nonSameAuthor : fresh.length ? fresh : pool;
+      const useLiveQuote =
+        liveQuote &&
+        !recentFrases.has(String(liveQuote.maxima || '').toLowerCase().slice(0, 48)) &&
+        Math.random() < 0.4;
+      const picked = useLiveQuote
+        ? liveQuote
+        : candidates[Math.floor(Math.random() * candidates.length)];
+
+      const autor = String(picked.autor || 'Sócrates').trim();
+      const obra = String(picked.obra || 'Obra Filosófica').trim();
+      const maxima = String(picked.maxima || '').trim();
+      const gancho = picked.gancho_sugerido
+        ? String(picked.gancho_sugerido).toUpperCase().trim()
+        : `${autor.toUpperCase()} · ${obra.toUpperCase()}`;
+      const words = maxima
+        .split(/\s+/)
+        .map((w) => w.replace(/^[^A-Za-zÁÉÍÓÚáéíóúÑñ]+|[^A-Za-zÁÉÍÓÚáéíóúÑñ]+$/g, ''))
+        .filter((w) => w.length >= 5);
+      const storyBlock = picked.historia ? `\n\n🌿 ${picked.historia}` : '';
+      const extraBlock = picked.ensenanza
+        ? `\n\n📖 ${label}: ${picked.ensenanza}\n🛡️ Práctica para hoy: ${picked.aplicacion_practica || ''}`
+        : `\n\n🛡️ Reflexión para hoy: Lleva esta idea a un gesto concreto de escucha, dignidad o calma en tu día.`;
+      const sourceBlock = picked.sourceUrl ? `\n🔗 Fuente Wikiquote: ${picked.sourceUrl}` : '';
+      const caption =
+        `${emoji} ${picked.gancho_sugerido || `${autor} (${obra})`}\n\n"${maxima}"${storyBlock}${extraBlock}${sourceBlock}\n\n` +
+        `🤝 Volver a la humanidad más humana empieza en cómo tratas hoy al otro y cómo cuidas tu propia presencia.\n\n` +
+        hashtags;
+
+      const atm = VALID_ATMOSPHERES.includes(picked.atmosfera)
+        ? picked.atmosfera
+        : contexto.targetAtmosphere || defaultAtm;
+
+      return {
+        gancho,
+        frase: maxima,
+        palabras_clave: [...new Set(words)].slice(0, 3),
+        atmosfera: atm,
+        prompt_arte: `${label} ${atm} landscape`,
+        caption
+      };
+    };
+
+    if (contexto.filtro === 'estoicismo' && (contexto.webPulse?.stoicQuote || stoicPool.length > 0)) {
+      return buildAuthorQuoteFallback({
+        liveQuote: contexto.webPulse?.stoicQuote,
+        pool: stoicPool,
+        defaultAtm: 'fortaleza',
+        emoji: '🏛️',
+        label: 'Enseñanza estoica',
+        hashtags: '#Estoicismo #Humanidad #MarcoAurelio #Seneca #Epicteto #ZenonDeCitio #SabiduriaEstoica'
+      });
+    }
+
+    if (
+      (contexto.filtro === 'filosofia' || (!contexto.filtro && filosofiaPool.length > 0)) &&
+      (contexto.webPulse?.filosofiaQuote || filosofiaPool.length > 0)
+    ) {
+      return buildAuthorQuoteFallback({
+        liveQuote: contexto.webPulse?.filosofiaQuote,
+        pool: filosofiaPool,
+        defaultAtm: 'amanecer',
+        emoji: '🦉',
+        label: 'Enseñanza filosófica',
+        hashtags: '#Filosofia #Humanidad #Socrates #Aristoteles #Kant #HannahArendt #EckhartTolle'
+      });
+    }
+
+    const sabHumBackup = [
+      {
+        autor: 'Sabiduría de Vida · Ley de Siembra',
+        obra: 'Parábolas Humanas',
+        gancho_sugerido: 'LO QUE PONES EN EL MUNDO VUELVE A TI',
+        maxima: 'Todo lo que pones en circulación —palabras, calma, respeto o enojo— termina volviendo tarde o temprano a tu propia mesa.',
+        historia: 'La vida funciona como un campo fértil: nadie siembra espinas esperando frutos dulces; cada gesto cotidiano deja una huella que regresa a tu propia vida.',
+        ensenanza: 'Cuidar la forma en que tratas a los demás hoy es también cuidar la paz que recibirás mañana.',
+        aplicacion_practica: 'Elige hoy sembrar un trato amable incluso en una fila o conversación apurada.',
+        atmosfera: 'amanecer'
+      },
+      {
+        autor: 'Ética de la Reciprocidad',
+        obra: 'Lectura Humana Universal',
+        gancho_sugerido: 'REGALA EL TRATO QUE QUIERES ENCONTRAR',
+        maxima: 'Ofrece hoy a las personas exactamente el mismo respeto, paciencia y escucha que sueñas encontrar cuando estás agotado.',
+        historia: 'En lugar de esperar a que el mundo cambie primero, esta enseñanza propone iniciar tú el clima humano que quieres habitar.',
+        ensenanza: 'No puedes controlar cómo actúan todos afuera, pero sí puedes decidir qué calidad de ser humano encuentra quien se cruza contigo.',
+        aplicacion_practica: 'Responde hoy con la delicadeza que te gustaría recibir en un mal día.',
+        atmosfera: 'aurora'
+      },
+      {
+        autor: 'Eclesiastés (Qohélet)',
+        obra: 'Sabiduría Antigua · Cap. 3',
+        gancho_sugerido: 'TODO TIENE SU TIEMPO BAJO EL CIELO',
+        maxima: 'Todo bajo el sol tiene su estación: tiempo de llorar y tiempo de reír, tiempo de soltar y tiempo de volver a construir.',
+        historia: 'La antigua poesía de Eclesiastés recuerda con serenidad que ninguna etapa dura para siempre y que cada ciclo humano cumple un aprendizaje.',
+        ensenanza: 'No te exijas florecer en pleno invierno; respeta tu proceso porque tu primavera también llegará.',
+        aplicacion_practica: 'Acepta con paciencia el momento que estás viviendo hoy sin castigarte.',
+        atmosfera: 'serenidad'
+      }
+    ];
+
+    const sabHumObj = contexto.corrientesObj?.sabiduriaHumana;
+    const sabHumPool =
+      Array.isArray(contexto.corrientesObj?.sabiduriaHumanaPool) &&
+      contexto.corrientesObj.sabiduriaHumanaPool.length > 0
+        ? contexto.corrientesObj.sabiduriaHumanaPool
+        : sabHumObj
+          ? [sabHumObj]
+          : sabHumBackup;
+
+    if (contexto.filtro === 'sabiduria_humana') {
+      return buildAuthorQuoteFallback({
+        liveQuote: null,
+        pool: sabHumPool,
+        defaultAtm: 'amanecer',
+        emoji: '🕊️',
+        label: 'Sabiduría práctica',
+        hashtags: '#SabiduriaHumana #Humanidad #Empatia #Esperanza #VidaConsciente #OraculoCiberFilosofico'
+      });
+    }
+
+    if (contexto.filtro === 'kybalion') {
+      const maestrosPool = Array.isArray(contexto.corrientesObj?.kybalionMaestros)
+        ? contexto.corrientesObj.kybalionMaestros
+        : [];
+      const leyesPool = kybalionPool.map((k) => ({
+        autor: `Kybalion · Ley ${k.numero}`,
+        obra: k.nombre,
+        maxima: k.axioma,
+        ensenanza: k.principio,
+        aplicacion_practica: k.aplicacion_practica,
+        atmosfera: 'cosmos'
+      }));
+      const combinedUniversalPool = [...maestrosPool, ...leyesPool];
+      if (contexto.webPulse?.kybalionQuote || combinedUniversalPool.length > 0) {
+        return buildAuthorQuoteFallback({
+          liveQuote: contexto.webPulse?.kybalionQuote,
+          pool: combinedUniversalPool,
+          defaultAtm: 'cosmos',
+          emoji: '🔺',
+          label: 'Ley Universal',
+          hashtags: '#LeyesUniversales #Kybalion #HermesTrismegisto #NevilleGoddard #WayneDyer #JoeDispenza #Humanidad'
+        });
+      }
+    }
+
+    if (contexto.filtro === 'taoismo' && (contexto.webPulse?.taoQuote || taoPool.length > 0)) {
+      const liveTao = contexto.webPulse?.taoQuote;
+      const useLive = liveTao && !recentFrases.has(String(liveTao.maxima || '').toLowerCase().slice(0, 48)) && Math.random() < 0.35;
+
+      if (useLive) {
+        const wordsT = String(liveTao.maxima || '')
+          .split(/\s+/)
+          .map((w) => w.replace(/^[^A-Za-zÁÉÍÓÚáéíóúÑñ]+|[^A-Za-zÁÉÍÓÚáéíóúÑñ]+$/g, ''))
+          .filter((w) => w.length >= 5);
+        const ganchoLive = `${String(liveTao.autor || 'TAOÍSMO').toUpperCase()} · ${String(liveTao.obra || 'TAO').toUpperCase()}`;
+        const captionLive =
+          `☯️ ${liveTao.autor} (${liveTao.obra})\n\n"${liveTao.maxima}"\n\n` +
+          `🌿 Frente a la prisa y al ruido de las pantallas, estas palabras devuelven calma, raíz y esperanza real hoy.\n` +
+          `🔗 Fuente Wikiquote: ${liveTao.sourceUrl}\n\n` +
+          `#Taoismo #Laozi #Zhuangzi #Liezi #WangChongyang #MaestrosCelestiales #EsperanzaReal`;
+        return {
+          gancho: ganchoLive,
+          frase: liveTao.maxima,
+          palabras_clave: [...new Set(wordsT)].slice(0, 3),
+          atmosfera: contexto.targetAtmosphere || 'serenidad',
+          prompt_arte: `Calm Taoist ${contexto.targetAtmosphere || 'serenidad'} nature landscape`,
+          caption: captionLive
+        };
+      }
+
+      const freshTao = taoPool.filter(
+        (t) => !recentGanchos.has(String(t.gancho_sugerido || t.titulo || '').toUpperCase().trim())
+      );
+      const poolTao = freshTao.length ? freshTao : taoPool;
+      const pickedTao = poolTao[Math.floor(Math.random() * poolTao.length)];
+      const ganchoTao = String(pickedTao.gancho_sugerido || pickedTao.titulo || 'SABIDURÍA DEL TAO').toUpperCase();
+      const fraseTao = String(pickedTao.frase_corta || pickedTao.ensenanza || '').trim();
+      const captionTao =
+        `☯️ ${pickedTao.titulo} — ${pickedTao.maestro}\n\n` +
+        `📖 ${pickedTao.historia}\n\n` +
+        `💡 Esperanza para hoy: ${pickedTao.ensenanza}\n\n` +
+        `Guarda esta imagen si hoy necesitabas bajar el ruido y volver a lo real. ¿Qué maestro te resonó más?\n\n` +
+        `#Taoismo #Laozi #Zhuangzi #Liezi #WangChongyang #MaestrosCelestiales #HistoriasCortas`;
+
+      return {
+        gancho: ganchoTao,
+        frase: fraseTao,
+        palabras_clave: Array.isArray(pickedTao.palabras_clave) ? pickedTao.palabras_clave.slice(0, 3) : [],
+        atmosfera: VALID_ATMOSPHERES.includes(pickedTao.atmosfera) ? pickedTao.atmosfera : 'serenidad',
+        prompt_arte: `Calm Taoist ${pickedTao.atmosfera || 'serenidad'} nature landscape`,
+        caption: captionTao
+      };
+    }
 
     const plantillas = [
       () => ({
@@ -670,12 +1004,27 @@ DEVUELVE SOLO JSON VÁLIDO:
         palabras_clave: ['descansar', 'florecer', 'fuerza'],
         atmosfera: 'fortaleza',
         caption_cuerpo: `${historia ? `En la historia, ${historia.personaje_o_evento} nos enseña: ${historia.aplicacion}` : 'Cuidar tu energía también es estrategia.'}`
+      }),
+      () => ({
+        gancho: '¿QUIÉN SABE QUÉ ES SUERTE HOY?',
+        frase:
+          'Como en la parábola taoísta del caballo perdido, lo que hoy parece tropiezo muchas veces te resguarda en silencio para mañana.',
+        palabras_clave: ['taoísta', 'resguarda', 'mañana'],
+        atmosfera: 'amanecer',
+        caption_cuerpo:
+          '📖 Parábola Taoísta: Un anciano perdió su único caballo y no se lamentó; días después regresó con otros corceles salvajes. Lo que hoy juzgamos como pérdida suele ser apenas el primer capítulo.'
+      }),
+      () => ({
+        gancho: 'LA FUERZA SILENCIOSA DEL AGUA',
+        frase:
+          'El agua no choca ni rompe de golpe: rodea con calma, insiste sin odio y termina abriendo camino entre rocas firmes.',
+        palabras_clave: ['agua', 'calma', 'camino'],
+        atmosfera: 'serenidad',
+        caption_cuerpo:
+          '☯️ Enseñanza de Lao Tse: Lo más suave y constante vence con el tiempo a lo más rígido. Hoy avanza con flexibilidad serena.'
       })
     ];
 
-    const recentGanchos = new Set(
-      (contexto.recentMessages || []).map((m) => String(m.gancho || '').toUpperCase().trim())
-    );
     const freshTemplates = plantillas.filter((fn) => {
       const sample = fn();
       return !recentGanchos.has(String(sample.gancho || '').toUpperCase().trim());
@@ -697,9 +1046,50 @@ DEVUELVE SOLO JSON VÁLIDO:
     };
   }
 
+  function fitCompleteEphemerisText(rawText, maxChars = 205) {
+    let clean = String(rawText || '');
+    const junkIdx = clean.search(/(?:[«"'(]\s*)?(?:copia archivada|archivado desde el original|consultado el \d|wayback machine)/i);
+    if (junkIdx !== -1) clean = clean.slice(0, junkIdx);
+    clean = clean.replace(/\[\d+\]/g, '').replace(/\s*\.\.\.\s*/g, ' ').replace(/\s+/g, ' ').trim();
+    if (!clean) return 'Cada fecha guarda memoria viva que inspira conciencia en nuestro presente.';
+
+    const sentences = clean
+      .split(/(?<=[.!?])\s+/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    let out = '';
+    for (const s of sentences) {
+      const candidate = out ? `${out} ${s}` : s;
+      if (candidate.length <= maxChars) {
+        out = candidate;
+      } else {
+        break;
+      }
+    }
+
+    if (out) {
+      return /[.!?]$/.test(out) ? out : `${out}.`;
+    }
+
+    if (clean.length <= maxChars) {
+      return /[.!?]$/.test(clean) ? clean : `${clean}.`;
+    }
+
+    const slice = clean.slice(0, maxChars - 1);
+    const clauseEnd = Math.max(slice.lastIndexOf('; '), slice.lastIndexOf(', '), slice.lastIndexOf(' — '));
+    const trimmed =
+      clauseEnd >= 85
+        ? slice.slice(0, clauseEnd)
+        : slice
+            .replace(/\s+\S*$/, '')
+            .replace(/\s+(?:el|la|los|las|un|una|unos|unas|de|del|al|en|y|o|e|con|por|para|sobre|entre|su|sus|que)$/i, '');
+    return `${trimmed.replace(/[,\s;:\-]+$/, '')}.`;
+  }
+
   function buildLocalEphemerisFallback(ephemerisItem, contexto) {
     const rawText = String(ephemerisItem?.text || '').replace(/\s+/g, ' ').trim();
-    const shortFrase = rawText.length > 175 ? `${rawText.slice(0, 172).replace(/\s+\S*$/, '')}...` : rawText;
+    const shortFrase = fitCompleteEphemerisText(rawText, 205);
     const isChile = ephemerisItem?.kind === 'chile' || contexto.efemerideEnfoque === 'chile';
     const isWorldDay = ephemerisItem?.kind === 'mundial';
     const gancho = isChile

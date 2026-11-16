@@ -255,11 +255,292 @@ Resume en máximo 3 líneas en español un hecho concreto, real y edificante que
     }
   }
 
+  const stoicQuotesCache = { loaded: false, items: [] };
+  const taoQuotesCache = { loaded: false, items: [] };
+  const filosofiaQuotesCache = { loaded: false, items: [] };
+  const kybalionQuotesCache = { loaded: false, items: [] };
+
+  function parseWikiquoteAuthorPage(pageTitle, wikitext, pageUrl, defaultWorks) {
+    const cleanAuthor = String(pageTitle || '')
+      .replace(/^Lucio Anneo\s+/i, '')
+      .replace(/^Cayo\s+/i, '')
+      .trim();
+    const defaultWork = defaultWorks[cleanAuthor] || 'Wikiquote';
+
+    const quotes = [];
+    const lines = String(wikitext || '').split('\n');
+    let inQuotes = true;
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
+
+      const sec = line.match(/^==+\s*([^=]+?)\s*==+$/);
+      if (sec) {
+        const h = sec[1].toLowerCase();
+        if (/sobre\s|referencia|bibliograf|enlace|v[eé]ase|biograf|vida|obra|cultura|atribuida|dudosa/i.test(h)) {
+          inQuotes = false;
+        } else if (/citas|frases|m[aá]ximas|pensamientos/i.test(h)) {
+          inQuotes = true;
+        }
+        continue;
+      }
+
+      if (!inQuotes) continue;
+      if (!/^\*\s+[^*]/.test(line)) continue;
+
+      let quoteText = cleanWikitextLine(line.replace(/^\*\s+/, ''));
+      quoteText = quoteText.replace(/^[«"“]+|[»"”]+$/g, '').trim();
+      if (
+        quoteText.length < 32 ||
+        quoteText.length > 180 ||
+        !/[.!?]$/.test(quoteText) ||
+        /\[\[|\]\]|—\s*[A-ZÁÉÍÓÚÑ]|wikiquote|traducci[oó]n|original en lat[ií]n|fuente:|nota:|isbn|http/i.test(quoteText)
+      ) {
+        continue;
+      }
+
+      let obra = defaultWork;
+      const nextLine = (lines[i + 1] || '').trim();
+      if (/^\*\*/.test(nextLine)) {
+        const cleanSub = cleanWikitextLine(nextLine.replace(/^\*+\s*/, ''))
+          .replace(/^(fuente|obra|referencia)\s*:\s*/i, '')
+          .trim();
+        if (cleanSub.length >= 4 && cleanSub.length <= 70) {
+          obra = cleanSub;
+        }
+      }
+
+      quotes.push({
+        autor: cleanAuthor,
+        obra,
+        maxima: quoteText,
+        sourceUrl: pageUrl || 'https://es.wikiquote.org/'
+      });
+    }
+
+    return quotes;
+  }
+
+  async function fetchWikiquoteLineageQuote({ titles, defaultWorks, cache, recentMessages = [] }) {
+    if (!cache.loaded) {
+      const url =
+        `https://es.wikiquote.org/w/api.php?action=query&titles=${encodeURIComponent(titles)}` +
+        `&prop=revisions|info&rvprop=content&rvslots=main&inprop=url&redirects=1&format=json`;
+      try {
+        const data = await jsonpRequest(url, 3200);
+        const pages = Object.values(data?.query?.pages || {});
+        const collected = [];
+        for (const p of pages) {
+          const wt = p?.revisions?.[0]?.slots?.main?.['*'] || p?.revisions?.[0]?.['*'] || '';
+          if (wt) {
+            collected.push(...parseWikiquoteAuthorPage(p.title, wt, p.fullurl, defaultWorks));
+          }
+        }
+        if (collected.length > 0) {
+          cache.items = collected;
+          cache.loaded = true;
+        }
+      } catch {
+        // Sin conexión a Wikiquote; se usará el códice local
+      }
+    }
+
+    if (!cache.items.length) return null;
+
+    const seenTexts = new Set(
+      (recentMessages || []).map((m) => String(m.frase || '').toLowerCase().slice(0, 48))
+    );
+    const fresh = cache.items.filter(
+      (q) => !seenTexts.has(q.maxima.toLowerCase().slice(0, 48))
+    );
+    const pool = fresh.length ? fresh : cache.items;
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
   /**
    * Recopila contexto web en vivo rápidamente (Wikipedia/Wikiquote JSONP y /api/web-pulse).
-   * Presupuesto máximo de 1.5 s para no frenar la generación ni gastar cuota extra de Gemini.
+   * Para Estoicismo y Taoísmo consulta directamente frases reales de sus maestros en Wikiquote.
    */
   async function gatherLiveWebContext({ apiKey = '', contexto } = {}) {
+    if (contexto?.filtro === 'estoicismo') {
+      const stoicQuote = await Promise.race([
+        fetchWikiquoteLineageQuote({
+          titles: 'Marco_Aurelio|Lucio_Anneo_Séneca|Epicteto|Zenón_de_Citio|Cleantes|Crisipo_de_Solos',
+          defaultWorks: {
+            'Marco Aurelio': 'Meditaciones (Wikiquote)',
+            'Séneca': 'Séneca el Joven · Cartas y Tratados (Wikiquote)',
+            Epicteto: 'Enquiridión y Disertaciones (Wikiquote)',
+            'Zenón de Citio': 'Fragmentos (Wikiquote)',
+            Cleantes: 'Cleantes de Aso · Himno a Zeus (Wikiquote)',
+            'Crisipo de Solos': 'Fragmentos SVF (Wikiquote)'
+          },
+          cache: stoicQuotesCache,
+          recentMessages: contexto.recentMessages
+        }),
+        new Promise((resolve) => setTimeout(() => resolve(null), 2400))
+      ]);
+      if (stoicQuote) {
+        return {
+          connected: true,
+          stoicQuote,
+          summaryText: `Cita estoica real (${stoicQuote.autor} · ${stoicQuote.obra}): "${stoicQuote.maxima}"`,
+          sources: [
+            {
+              origin: 'Wikiquote Estoicismo',
+              title: `${stoicQuote.autor} (${stoicQuote.obra})`,
+              url: stoicQuote.sourceUrl
+            }
+          ],
+          headline: `${stoicQuote.autor}: ${stoicQuote.obra}`
+        };
+      }
+      return {
+        connected: false,
+        stoicQuote: null,
+        summaryText: '',
+        sources: [],
+        headline: 'Usando códice de libros estoicos locales'
+      };
+    }
+
+    if (contexto?.filtro === 'taoismo') {
+      const taoQuote = await Promise.race([
+        fetchWikiquoteLineageQuote({
+          titles: 'Lao-Tse|Zhuangzi|Tao_Te_Ching|Lie_Yukou',
+          defaultWorks: {
+            'Lao-Tse': 'Tao Te Ching (Wikiquote)',
+            'Tao Te Ching': 'Laozi · Tao Te Ching (Wikiquote)',
+            Zhuangzi: 'Zhuangzi / Chuang Tzu (Wikiquote)',
+            'Lie Yukou': 'Liezi (Wikiquote)'
+          },
+          cache: taoQuotesCache,
+          recentMessages: contexto.recentMessages
+        }),
+        new Promise((resolve) => setTimeout(() => resolve(null), 2400))
+      ]);
+      if (taoQuote) {
+        return {
+          connected: true,
+          taoQuote,
+          summaryText: `Sabiduría taoísta real (${taoQuote.autor} · ${taoQuote.obra}): "${taoQuote.maxima}"`,
+          sources: [
+            {
+              origin: 'Wikiquote Taoísmo',
+              title: `${taoQuote.autor} (${taoQuote.obra})`,
+              url: taoQuote.sourceUrl
+            }
+          ],
+          headline: `${taoQuote.autor}: ${taoQuote.obra}`
+        };
+      }
+      return {
+        connected: false,
+        taoQuote: null,
+        summaryText: '',
+        sources: [],
+        headline: 'Usando códice de maestros taoístas locales'
+      };
+    }
+
+    if (contexto?.filtro === 'filosofia') {
+      const filosofiaQuote = await Promise.race([
+        fetchWikiquoteLineageQuote({
+          titles:
+            'Sócrates|Platón|Aristóteles|Epicuro|Agustín_de_Hipona|Tomás_de_Aquino|Nicolás_Maquiavelo|René_Descartes|Baruch_Spinoza|John_Locke|David_Hume|Immanuel_Kant|Georg_Wilhelm_Friedrich_Hegel|Karl_Marx|Friedrich_Nietzsche|Ludwig_Wittgenstein|Martin_Heidegger|Hannah_Arendt|Eckhart_Tolle',
+          defaultWorks: {
+            Sócrates: 'Diálogos / Apología (Wikiquote)',
+            Platón: 'La República / Diálogos (Wikiquote)',
+            Aristóteles: 'Ética a Nicómaco (Wikiquote)',
+            Epicuro: 'Carta a Meneceo (Wikiquote)',
+            'Agustín de Hipona': 'Confesiones (Wikiquote)',
+            'Tomás de Aquino': 'Suma Teológica (Wikiquote)',
+            'Nicolás Maquiavelo': 'El Príncipe / Discursos (Wikiquote)',
+            'René Descartes': 'Discurso del método (Wikiquote)',
+            'Baruch Spinoza': 'Ética (Wikiquote)',
+            'John Locke': 'Ensayo sobre el entendimiento (Wikiquote)',
+            'David Hume': 'Tratado de la naturaleza humana (Wikiquote)',
+            'Immanuel Kant': 'Crítica de la razón práctica (Wikiquote)',
+            'Georg Wilhelm Friedrich Hegel': 'Fenomenología del espíritu (Wikiquote)',
+            'Karl Marx': 'Obras Filosóficas (Wikiquote)',
+            'Friedrich Nietzsche': 'Así habló Zaratustra (Wikiquote)',
+            'Ludwig Wittgenstein': 'Tractatus Logico-Philosophicus (Wikiquote)',
+            'Martin Heidegger': 'Ser y Tiempo / Serenidad (Wikiquote)',
+            'Hannah Arendt': 'La condición humana (Wikiquote)',
+            'Eckhart Tolle': 'El poder del ahora (Wikiquote)'
+          },
+          cache: filosofiaQuotesCache,
+          recentMessages: contexto.recentMessages
+        }),
+        new Promise((resolve) => setTimeout(() => resolve(null), 2600))
+      ]);
+      if (filosofiaQuote) {
+        return {
+          connected: true,
+          filosofiaQuote,
+          summaryText: `Cita filosófica real (${filosofiaQuote.autor} · ${filosofiaQuote.obra}): "${filosofiaQuote.maxima}"`,
+          sources: [
+            {
+              origin: 'Wikiquote Filosofía',
+              title: `${filosofiaQuote.autor} (${filosofiaQuote.obra})`,
+              url: filosofiaQuote.sourceUrl
+            }
+          ],
+          headline: `${filosofiaQuote.autor}: ${filosofiaQuote.obra}`
+        };
+      }
+      return {
+        connected: false,
+        filosofiaQuote: null,
+        summaryText: '',
+        sources: [],
+        headline: 'Usando códice filosófico curado'
+      };
+    }
+
+    if (contexto?.filtro === 'kybalion') {
+      const kybalionQuote = await Promise.race([
+        fetchWikiquoteLineageQuote({
+          titles:
+            'Hermes_Trismegisto|Pitágoras|Paracelso|Giordano_Bruno|Wallace_Wattles|Wayne_Dyer|El_Kybalión',
+          defaultWorks: {
+            'Hermes Trismegisto': 'Corpus Hermeticum (Wikiquote)',
+            Pitágoras: 'Versos de Oro (Wikiquote)',
+            Paracelso: 'De Natura Rerum (Wikiquote)',
+            'Giordano Bruno': 'Obras Herméticas (Wikiquote)',
+            'Wallace Wattles': 'La ciencia de hacerse rico (Wikiquote)',
+            'Wayne Dyer': 'El poder de la intención (Wikiquote)',
+            'El Kybalión': 'Los Tres Iniciados · El Kybalión (Wikiquote)'
+          },
+          cache: kybalionQuotesCache,
+          recentMessages: contexto.recentMessages
+        }),
+        new Promise((resolve) => setTimeout(() => resolve(null), 2600))
+      ]);
+      if (kybalionQuote) {
+        return {
+          connected: true,
+          kybalionQuote,
+          summaryText: `Ley Universal (${kybalionQuote.autor} · ${kybalionQuote.obra}): "${kybalionQuote.maxima}"`,
+          sources: [
+            {
+              origin: 'Wikiquote Leyes Universales',
+              title: `${kybalionQuote.autor} (${kybalionQuote.obra})`,
+              url: kybalionQuote.sourceUrl
+            }
+          ],
+          headline: `${kybalionQuote.autor}: ${kybalionQuote.obra}`
+        };
+      }
+      return {
+        connected: false,
+        kybalionQuote: null,
+        summaryText: '',
+        sources: [],
+        headline: 'Usando códice de Maestros y Kybalion locales'
+      };
+    }
+
     const fecha = contexto?.fecha || new Date();
     const allInsights = [];
     const allSources = [];
@@ -377,28 +658,55 @@ Resume en máximo 3 líneas en español un hecho concreto, real y edificante que
     return titles.slice(0, 4);
   }
 
+  const COUNTRY_CODE_MAP = {
+    CHI: 'Chile',
+    CHL: 'Chile',
+    ARG: 'Argentina',
+    PER: 'Perú',
+    MEX: 'México',
+    ESP: 'España',
+    COL: 'Colombia',
+    BOL: 'Bolivia',
+    VEN: 'Venezuela',
+    URY: 'Uruguay',
+    ECU: 'Ecuador',
+    PRY: 'Paraguay',
+    BRA: 'Brasil',
+    USA: 'Estados Unidos'
+  };
+
+  function collapseAdjacentDuplicates(text) {
+    let s = String(text || '').replace(/\s+/g, ' ').trim();
+    // Colapsar "Argentina Argentina:" / "Chile Chile:" / "Estados Unidos Estados Unidos:"
+    s = s.replace(
+      /\b([A-ZÁÉÍÓÚÑ][A-Za-zÁÉÍÓÚáéíóúÑñ]+(?:\s+[A-ZÁÉÍÓÚÑ][A-Za-zÁÉÍÓÚáéíóúÑñ]+){0,2})(?:\s*[,;:\-–]?\s+)\1\b/gi,
+      '$1'
+    );
+    s = s.replace(/\s+([:.,;])/g, '$1');
+    return s.trim();
+  }
+
   function cleanWikitextLine(raw) {
     let s = String(raw || '');
     s = s.replace(/<ref[^>]*>[\s\S]*?<\/ref>/gi, '');
     s = s.replace(/<ref[^/]*\/>/gi, '');
     s = s.replace(/<!--[\s\S]*?-->/g, '');
     s = s.replace(/\[\[(?:Archivo|File|Imagen|Image):[^\]]+\]\]/gi, '');
-    s = s.replace(/\{\{(?:bandera2?|flag)\|([^|}]+)(?:\|[^}]*)?\}\}/gi, '$1 ');
-    s = s.replace(/\{\{CHI\}\}/g, 'Chile');
-    s = s.replace(/\{\{ARG\}\}/g, 'Argentina');
-    s = s.replace(/\{\{PER\}\}/g, 'Perú');
-    s = s.replace(/\{\{MEX\}\}/g, 'México');
-    s = s.replace(/\{\{ESP\}\}/g, 'España');
-    s = s.replace(/\{\{COL\}\}/g, 'Colombia');
-    s = s.replace(/\{\{BOL\}\}/g, 'Bolivia');
+    s = s.replace(/\{\{(?:bandera2?|flag)\|([^|}]+)(?:\|[^}]*)?\}\}/gi, (_, code) => {
+      const upper = code.trim().toUpperCase();
+      return `${COUNTRY_CODE_MAP[upper] || code.trim()} `;
+    });
+    s = s.replace(/\{\{(CHI|CHL|ARG|PER|MEX|ESP|COL|BOL|VEN|URY|ECU|PRY|BRA|USA)\}\}/g, (_, code) => {
+      return COUNTRY_CODE_MAP[code] || code;
+    });
     s = s.replace(/\{\{(?:siglo|a\.?\s*C\.?|d\.?\s*C\.?)\|([^|}]+)(?:\|[^}]*)?\}\}/gi, '$1');
     s = s.replace(/\{\{[^{}]*\}\}/g, '');
     s = s.replace(/\[\[[^\]|]+\|([^\]]+)\]\]/g, '$1');
     s = s.replace(/\[\[([^\]]+)\]\]/g, '$1');
     s = s.replace(/'''?/g, '');
     s = s.replace(/<[^>]+>/g, '');
-    s = s.replace(/&nbsp;/gi, ' ').replace(/\s+/g, ' ').trim();
-    return s;
+    s = s.replace(/&nbsp;/gi, ' ');
+    return collapseAdjacentDuplicates(s);
   }
 
   const CHILE_STRICT_REGEX =
@@ -447,11 +755,12 @@ Resume en máximo 3 líneas en español un hecho concreto, real y edificante que
       if (!clean || clean.length < 16) continue;
 
       if (section === 'holidays') {
-        if (isStrictChileEvent(clean)) {
+        const cleanText = extractCompleteSentences(clean, 200);
+        if (cleanText && isStrictChileEvent(cleanText)) {
           chileItems.push({
             kind: 'chile',
             year: null,
-            text: clean.slice(0, 260),
+            text: cleanText,
             extract: '',
             wikiTitles,
             imageUrl: '',
@@ -460,11 +769,11 @@ Resume en máximo 3 líneas en español un hecho concreto, real y edificante que
             sourceUrl: pageUrl
           });
         }
-        if (!/^\s*en\s+[a-z]/i.test(clean) || /internacional|mundial|onu|unesco|oms|global/i.test(clean)) {
+        if (cleanText && (!/^\s*en\s+[a-z]/i.test(cleanText) || /internacional|mundial|onu|unesco|oms|global/i.test(cleanText))) {
           holidays.push({
             kind: 'mundial',
             year: null,
-            text: clean.slice(0, 260),
+            text: cleanText,
             extract: '',
             wikiTitles,
             imageUrl: '',
@@ -475,11 +784,12 @@ Resume en máximo 3 líneas en español un hecho concreto, real y edificante que
         }
       } else if (section === 'events') {
         const m = clean.match(/^(\d{3,4})\s*[:\-–.]\s*(.+)$/);
-        if (m && m[2].length > 22) {
+        const eventText = m ? extractCompleteSentences(m[2], 200) : '';
+        if (m && eventText.length > 22) {
           const itemObj = {
             kind: 'historia',
             year: Number(m[1]),
-            text: m[2].trim().slice(0, 280),
+            text: eventText,
             extract: '',
             wikiTitles,
             imageUrl: '',
@@ -488,7 +798,7 @@ Resume en máximo 3 líneas en español un hecho concreto, real y edificante que
             sourceUrl: pageUrl
           };
           events.push(itemObj);
-          if (isStrictChileEvent(m[2])) {
+          if (isStrictChileEvent(eventText)) {
             chileItems.push({
               ...itemObj,
               kind: 'chile',
@@ -632,13 +942,13 @@ Resume en máximo 3 líneas en español un hecho concreto, real y edificante que
           .map((pg) => pg?.titles?.normalized || pg?.title)
           .filter(Boolean)
           .slice(0, 3);
-        const text = String(item.text || page?.description || '').trim();
+        const text = extractCompleteSentences(collapseAdjacentDuplicates(item.text || page?.description || ''), 200);
         if (!text) return null;
         return {
           kind,
           year: item.year || null,
-          text: text.slice(0, 280),
-          extract: String(page?.extract || '').slice(0, 320),
+          text,
+          extract: extractCompleteSentences(page?.extract || '', 260),
           wikiTitles,
           imageUrl: imageCandidates[0] || '',
           imageCandidates,
@@ -710,12 +1020,64 @@ Resume en máximo 3 líneas en español un hecho concreto, real y edificante que
     return pool;
   }
 
+  const CITATION_JUNK_REGEX =
+    /copia archivada|archivado desde el original|consultado el \d|wayback machine|\bdoi\s*:|\bisbn\b|\bissn\b|bibliograf[ií]a|enlaces externos|véase también|wikimedia commons alberga/i;
+
+  function stripCitationNoise(text) {
+    let s = String(text || '');
+    const junkIdx = s.search(/(?:[«"'(]\s*)?(?:copia archivada|archivado desde el original|consultado el \d|wayback machine)/i);
+    if (junkIdx !== -1) s = s.slice(0, junkIdx);
+    s = s.replace(/\[\d+\]/g, '');
+    s = s.replace(/\s*\.\.\.\s*/g, ' ');
+    return collapseAdjacentDuplicates(s);
+  }
+
+  function extractCompleteSentences(text, maxChars = 195) {
+    const cleaned = stripCitationNoise(text);
+    if (!cleaned) return '';
+    const sentences = cleaned
+      .split(/(?<=[.!?])\s+/)
+      .map((s) => s.trim())
+      .filter((s) => s.length >= 24 && !CITATION_JUNK_REGEX.test(s));
+
+    if (!sentences.length) {
+      return cleaned.length <= maxChars ? `${cleaned.replace(/[,\s;:\-]+$/, '')}.` : '';
+    }
+
+    let out = '';
+    for (const sent of sentences) {
+      const candidate = out ? `${out} ${sent}` : sent;
+      if (candidate.length <= maxChars) {
+        out = candidate;
+      } else {
+        break;
+      }
+    }
+
+    if (out) {
+      return /[.!?]$/.test(out) ? out : `${out}.`;
+    }
+
+    const first = sentences[0];
+    if (first.length <= maxChars + 25) return /[.!?]$/.test(first) ? first : `${first}.`;
+
+    const slice = first.slice(0, maxChars - 1);
+    const clauseEnd = Math.max(slice.lastIndexOf('; '), slice.lastIndexOf(', '), slice.lastIndexOf(' — '));
+    const trimmed =
+      clauseEnd >= 80
+        ? slice.slice(0, clauseEnd)
+        : slice
+            .replace(/\s+\S*$/, '')
+            .replace(/\s+(?:el|la|los|las|un|una|unos|unas|de|del|al|en|y|o|e|con|por|para|sobre|entre|su|sus|que)$/i, '');
+    return `${trimmed.replace(/[,\s;:\-]+$/, '')}.`;
+  }
+
   const CHILE_CURATED_BY_DATE = {
     '11-15': [
       {
         kind: 'chile',
         year: 1945,
-        text: 'El 15 de noviembre de 1945 la Academia Sueca anunció en Estocolmo el Premio Nobel de Literatura para la poeta y educadora chilena Gabriela Mistral, primera autora latinoamericana en recibirlo.',
+        text: 'El 15 de noviembre de 1945 la Academia Sueca anunció el Premio Nobel de Literatura para la poeta chilena Gabriela Mistral, primera persona latinoamericana en recibirlo.',
         extract: 'Lucila Godoy Alcayaga (Gabriela Mistral) llevó la voz de Chile, la infancia y América Latina al reconocimiento universal.',
         wikiTitles: ['Gabriela Mistral'],
         imageUrl: '',
@@ -726,8 +1088,8 @@ Resume en máximo 3 líneas en español un hecho concreto, real y edificante que
       {
         kind: 'chile',
         year: 2019,
-        text: 'El 15 de noviembre de 2019 se firmó en el ex Congreso Nacional en Santiago el Acuerdo por la Paz Social y la Nueva Constitución, abriendo una salida institucional mediante plebiscito ciudadano.',
-        extract: 'Hito político contemporáneo de Chile acordado en madrugada tras masivas movilizaciones sociales.',
+        text: 'El 15 de noviembre de 2019 se firmó en el ex Congreso Nacional en Santiago el Acuerdo por la Paz Social y la Nueva Constitución.',
+        extract: 'Pacto político chileno acordado tras masivas movilizaciones sociales para abrir un plebiscito ciudadano.',
         wikiTitles: ['Palacio del ex Congreso Nacional de Chile', 'Santiago de Chile'],
         imageUrl: '',
         imageCandidates: [],
@@ -737,7 +1099,7 @@ Resume en máximo 3 líneas en español un hecho concreto, real y edificante que
       {
         kind: 'chile',
         year: 1962,
-        text: 'El 15 de noviembre de 1962 se promulgó en Chile la Ley N° 15.020, primera Ley de Reforma Agraria que impulsó la creación de instituciones como INDAP y CORA para el mundo rural chileno.',
+        text: 'El 15 de noviembre de 1962 se promulgó en Chile la primera Ley de Reforma Agraria (Ley N° 15.020), dando impulso histórico al mundo rural e INDAP.',
         extract: 'Promulgada durante el gobierno de Jorge Alessandri para modernizar la agricultura y el acceso a la tierra en Chile.',
         wikiTitles: ['Reforma agraria chilena', 'Instituto de Desarrollo Agropecuario'],
         imageUrl: '',
@@ -748,8 +1110,8 @@ Resume en máximo 3 líneas en español un hecho concreto, real y edificante que
       {
         kind: 'chile',
         year: 1811,
-        text: 'El 15 de noviembre de 1811, durante la Patria Vieja chilena, José Miguel Carrera encabezó el movimiento que instauró un nuevo triunvirato ejecutivo junto a Bernardo O’Higgins y Gaspar Marín.',
-        extract: 'Episodio decisivo de los primeros años de independencia y organización republicana de Chile.',
+        text: 'El 15 de noviembre de 1811, en plena Patria Vieja, José Miguel Carrera encabezó en Chile el movimiento que instauró un nuevo triunvirato ejecutivo.',
+        extract: 'Episodio decisivo de los primeros años de independencia y organización republicana de Chile junto a Bernardo O’Higgins.',
         wikiTitles: ['José Miguel Carrera', 'Patria Vieja'],
         imageUrl: '',
         imageCandidates: [],
@@ -766,6 +1128,28 @@ Resume en máximo 3 líneas en español un hecho concreto, real y edificante que
         imageCandidates: [],
         sourceOrigin: 'Efeméride de Chile',
         sourceUrl: 'https://es.wikipedia.org/wiki/Pe%C3%B1alol%C3%A9n'
+      },
+      {
+        kind: 'chile',
+        year: 1985,
+        text: 'El 15 de noviembre de 1985 se restableció oficialmente en Chile el Tribunal Calificador de Elecciones (TRICEL) mediante la Ley Orgánica N° 18.460.',
+        extract: 'Organismo autónomo clave del sistema electoral chileno encargado de calificar elecciones y plebiscitos.',
+        wikiTitles: ['Tribunal Calificador de Elecciones de Chile'],
+        imageUrl: '',
+        imageCandidates: [],
+        sourceOrigin: 'Efeméride de Chile',
+        sourceUrl: 'https://es.wikipedia.org/wiki/Tribunal_Calificador_de_Elecciones_de_Chile'
+      },
+      {
+        kind: 'chile',
+        year: 1902,
+        text: 'El 15 de noviembre de 1902 se fundó en Santiago de Chile el diario Las Últimas Noticias (LUN), uno de los periódicos más tradicionales del país.',
+        extract: 'Medio escrito chileno fundado por Agustín Edwards Mac-Clure en la capital del país.',
+        wikiTitles: ['Las Últimas Noticias', 'Santiago de Chile'],
+        imageUrl: '',
+        imageCandidates: [],
+        sourceOrigin: 'Efeméride de Chile',
+        sourceUrl: 'https://es.wikipedia.org/wiki/Las_%C3%9Altimas_Noticias'
       }
     ]
   };
@@ -798,8 +1182,9 @@ Resume en máximo 3 líneas en español un hecho concreto, real y edificante que
       const verifiedHits = hits.filter((h) => {
         const title = String(h?.title || '').trim();
         if (!title || /^\d{1,2} de |^\d{3,4}$|^Anexo:/i.test(title)) return false;
-        const snippet = String(h?.snippet || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-        return dayRx.test(snippet) && isStrictChileEvent(`${title}: ${snippet}`);
+        const rawSnippet = String(h?.snippet || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+        if (CITATION_JUNK_REGEX.test(rawSnippet)) return false;
+        return dayRx.test(rawSnippet) && isStrictChileEvent(`${title}: ${rawSnippet}`);
       });
 
       let wikiItems = [];
@@ -807,21 +1192,32 @@ Resume en máximo 3 líneas en español un hecho concreto, real y edificante que
         const pageIds = verifiedHits.slice(0, 6).map((h) => h.pageid).join('|');
         const detailUrl =
           `https://es.wikipedia.org/w/api.php?action=query&pageids=${pageIds}` +
-          `&prop=extracts|pageimages|info&exintro=1&explaintext=1&exchars=340` +
+          `&prop=extracts|pageimages|info&exintro=1&explaintext=1&exchars=650` +
           `&piprop=thumbnail|original&pithumbsize=960&inprop=url&format=json`;
         const detailRes = await jsonpRequest(detailUrl, 3000);
         const pages = Object.values(detailRes?.query?.pages || {});
 
         for (const p of pages) {
           const title = String(p?.title || '').trim();
-          const extract = String(p?.extract || '').replace(/\s+/g, ' ').trim();
+          const extract = stripCitationNoise(p?.extract || '');
           if (!title || !extract) continue;
-          const firstSentence = extract.split(/(?<=[.!?])\s+/)[0] || extract;
+          const introSentences = extract.split(/(?<=[.!?])\s+/).map((s) => s.trim()).filter(Boolean);
+          const firstSentence = introSentences[0] || extract;
           if (!isStrictChileEvent(`${title}: ${firstSentence}`)) continue;
 
+          // Preferir una oración COMPLETA del resumen introductorio que mencione la fecha exacta
+          const matchingIntroSentence = introSentences.find((s) => dayRx.test(s) && s.length <= 210);
           const matchedHit = verifiedHits.find((vh) => vh.pageid === p.pageid);
-          const snippetClean = String(matchedHit?.snippet || '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
-          const yearMatch = `${snippetClean} ${extract}`.match(/\b(1[5-9]\d{2}|20[0-2]\d)\b/);
+          const rawSnippet = String(matchedHit?.snippet || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+          const cleanSnippet = stripCitationNoise(rawSnippet);
+          const completeFromSnippet = cleanSnippet
+            .split(/(?<=[.!?])\s+/)
+            .find((s) => dayRx.test(s) && s.length >= 35 && s.length <= 200 && /^[A-ZÁÉÍÓÚÑ0-9]/.test(s) && /[.!?]$/.test(s));
+
+          const chosenSentence = matchingIntroSentence || completeFromSnippet;
+          if (!chosenSentence) continue;
+
+          const yearMatch = `${chosenSentence} ${extract}`.match(/\b(1[5-9]\d{2}|20[0-2]\d)\b/);
           const candidates = [];
           if (isUsableWikiPhotoUrl(p?.thumbnail?.source)) candidates.push(p.thumbnail.source);
           const origW = Number(p?.original?.width || 0);
@@ -829,11 +1225,15 @@ Resume en máximo 3 líneas en español un hecho concreto, real y edificante que
             candidates.push(p.original.source);
           }
 
+          const finalText = chosenSentence.toLowerCase().includes(title.toLowerCase())
+            ? chosenSentence
+            : `${title}: ${chosenSentence}`;
+
           wikiItems.push({
             kind: 'chile',
             year: yearMatch ? Number(yearMatch[1]) : null,
-            text: `${title}: ${snippetClean.length > 40 ? snippetClean : firstSentence}`.slice(0, 270),
-            extract: extract.slice(0, 320),
+            text: extractCompleteSentences(finalText, 195),
+            extract: extractCompleteSentences(extract, 260),
             wikiTitles: [title],
             imageUrl: candidates[0] || '',
             imageCandidates: candidates,

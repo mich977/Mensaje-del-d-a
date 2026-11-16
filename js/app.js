@@ -25,11 +25,11 @@
   const MAX_HISTORY = 5;
 
   const FILTROS = {
-    aleatorio: 'Aleatorio Cósmico',
+    filosofia: 'Filosofía Universal',
+    taoismo: 'Taoísmo & Historias Cortas',
     estoicismo: 'Estoicismo',
-    kybalion: 'Kybalion & Hermetismo',
-    numerologia: 'Numerología del Día',
-    historia: 'Historia & Arquetipos'
+    kybalion: 'Leyes Universales & Kybalion',
+    sabiduria_humana: 'Sabiduría Humana & Parábolas'
   };
 
   const state = {
@@ -40,7 +40,7 @@
       efemerideEnfoque: 'mixto',
       formato: '4:5',
       firma: 'By Michael_NB-γ',
-      filtro: 'aleatorio',
+      filtro: 'filosofia',
       webPulseEnabled: true
     },
     currentOracle: null,
@@ -150,17 +150,22 @@
   }
 
   async function loadKnowledgeBase() {
-    if (global.SABIDURIA_DATA) {
+    if (global.SABIDURIA_DATA?.sabiduria_humana) {
       state.sabiduria = global.SABIDURIA_DATA;
       return;
     }
 
     if (global.location.protocol.startsWith('http')) {
-      const res = await fetch('./data/sabiduria.json');
+      const res = await fetch('./data/sabiduria.json', { cache: 'no-store' });
       if (res.ok) {
         state.sabiduria = await res.json();
         return;
       }
+    }
+
+    if (global.SABIDURIA_DATA) {
+      state.sabiduria = global.SABIDURIA_DATA;
+      return;
     }
 
     throw new Error('No se pudo cargar la base de conocimiento sabiduria.js');
@@ -181,66 +186,84 @@
     const kybalion = pickRandom(db.kybalion.leyes);
     const estoico = pickRandom(db.estoicismo.ensenanzas);
     const estoico2 = pickRandom(db.estoicismo.ensenanzas.filter((e) => e.id !== estoico?.id));
-    const signoOcc = pickRandom(db.astrologia_historia.zodiaco_occidental);
-    const signoChino = pickRandom(db.astrologia_historia.zodiaco_chino);
+    const taoHistorias = db.taoismo?.historias || [];
+    const tao = pickRandom(taoHistorias);
+    const tao2 = pickRandom(taoHistorias.filter((t) => t.id !== tao?.id));
+    const filoPool = db.filosofia?.ensenanzas || [];
+    const filo = pickRandom(filoPool);
+    const filo2 = pickRandom(filoPool.filter((f) => f.id !== filo?.id));
+    const sabHumPool = db.sabiduria_humana?.ensenanzas || [];
+    const sabHum = pickRandom(sabHumPool);
+    const sabHum2 = pickRandom(sabHumPool.filter((h) => h.id !== sabHum?.id));
     const elemento = pickRandom(db.astrologia_historia.elementos);
-    const historia = pickRandom(db.astrologia_historia.lecciones_historicas);
 
     const bloques = [];
     const corrientesObj = {};
 
-    if (filtro === 'estoicismo') {
+    if (filtro === 'sabiduria_humana' && sabHum) {
+      corrientesObj.sabiduriaHumana = sabHum;
+      corrientesObj.sabiduriaHumanaPool = sabHumPool;
+      bloques.push(
+        `- Enseñanza Humana (${sabHum.autor} · ${sabHum.obra}): "${sabHum.maxima}". Historia/Contexto: ${sabHum.historia}. Práctica: ${sabHum.aplicacion_practica}`
+      );
+      if (sabHum2) {
+        bloques.push(`- Eco Sapiencial (${sabHum2.autor}): "${sabHum2.maxima}"`);
+      }
+    } else if (filtro === 'taoismo' && tao) {
+      corrientesObj.taoismo = tao;
+      corrientesObj.taoismoPool = taoHistorias;
+      bloques.push(
+        `- Historia Taoísta (${tao.titulo} · ${tao.maestro}): "${tao.historia}" Moraleja: ${tao.ensenanza}`
+      );
+      if (tao2) {
+        bloques.push(`- Complemento Taoísta (${tao2.titulo}): ${tao2.ensenanza}`);
+      }
+    } else if (filtro === 'estoicismo') {
       corrientesObj.estoicismo = estoico;
+      corrientesObj.estoicismoPool = db.estoicismo.ensenanzas;
       bloques.push(
         `- Estoicismo (${estoico.autor}, ${estoico.obra} · Pilar ${estoico.pilar}): "${estoico.maxima}". Enseñanza: ${estoico.ensenanza}. Aplicación: ${estoico.aplicacion_practica}`
       );
       if (estoico2) {
         bloques.push(
-          `- Refuerzo Estoico (${estoico2.autor}): "${estoico2.maxima}". Aplicación: ${estoico2.aplicacion_practica}`
+          `- Refuerzo Estoico (${estoico2.autor}, ${estoico2.obra}): "${estoico2.maxima}". Aplicación: ${estoico2.aplicacion_practica}`
         );
       }
     } else if (filtro === 'kybalion') {
+      const maestroLey = pickRandom(db.kybalion.maestros || []);
       corrientesObj.kybalion = kybalion;
+      corrientesObj.kybalionPool = db.kybalion.leyes;
+      corrientesObj.kybalionMaestro = maestroLey;
+      corrientesObj.kybalionMaestros = db.kybalion.maestros || [];
+      if (maestroLey) {
+        bloques.push(
+          `- Maestro de Leyes Universales (${maestroLey.autor}, ${maestroLey.obra} · ${maestroLey.etapa}): "${maestroLey.maxima}". Enseñanza: ${maestroLey.ensenanza}. Aplicación: ${maestroLey.aplicacion_practica}`
+        );
+      }
       bloques.push(
-        `- Hermetismo / Kybalion (${kybalion.nombre}): Axioma "${kybalion.axioma}". Principio: ${kybalion.principio}. Aplicación: ${kybalion.aplicacion_practica}`
+        `- Kybalion (${kybalion.nombre}): Axioma "${kybalion.axioma}". Principio: ${kybalion.principio}. Aplicación: ${kybalion.aplicacion_practica}`
       );
       bloques.push(`- Elemento de transmutación (${elemento.nombre}): ${elemento.sabiduria}`);
-    } else if (filtro === 'numerologia') {
-      corrientesObj.kybalion = kybalion;
-      corrientesObj.estoicismo = estoico;
-      bloques.push(
-        `- Numerología del Día (${numInfo.titulo}): Luz (${numInfo.luz}) vs Sombra (${numInfo.sombra}). Vibración: ${numInfo.vibracion}`
-      );
-      bloques.push(`- Puente Hermético (${kybalion.nombre}): "${kybalion.axioma}"`);
-      bloques.push(`- Ancla Estoica (${estoico.autor}): "${estoico.maxima}"`);
-    } else if (filtro === 'historia') {
-      corrientesObj.historia = historia;
-      corrientesObj.astrologia = signoOcc;
-      bloques.push(
-        `- Lección Histórica (${historia.personaje_o_evento}, ${historia.epoca}): ${historia.leccion} Clave: ${historia.aplicacion}`
-      );
-      bloques.push(
-        `- Arquetipo Zodiacal (${signoOcc.nombre} · ${signoOcc.arquetipo}, ${signoOcc.elemento}): ${signoOcc.sabiduria}`
-      );
-      bloques.push(
-        `- Arquetipo Oriental (${signoChino.nombre} · ${signoChino.arquetipo}): ${signoChino.virtud}`
-      );
     } else {
-      corrientesObj.kybalion = kybalion;
-      corrientesObj.estoicismo = estoico;
-      corrientesObj.historia = historia;
-      corrientesObj.astrologia = signoOcc;
-      bloques.push(`- Kybalion (${kybalion.nombre}): "${kybalion.axioma}" — ${kybalion.aplicacion_practica}`);
-      bloques.push(`- Estoicismo (${estoico.autor}): "${estoico.maxima}" — ${estoico.ensenanza}`);
-      bloques.push(`- Historia (${historia.personaje_o_evento}): ${historia.aplicacion}`);
-      bloques.push(`- Arquetipo (${signoOcc.nombre} / ${elemento.nombre}): ${signoOcc.sabiduria}`);
+      corrientesObj.filosofia = filo;
+      corrientesObj.filosofiaPool = filoPool;
+      if (filo) {
+        bloques.push(
+          `- Filosofía (${filo.autor}, ${filo.obra}): "${filo.maxima}". Enseñanza: ${filo.ensenanza}. Aplicación: ${filo.aplicacion_practica}`
+        );
+      }
+      if (filo2) {
+        bloques.push(
+          `- Diálogo Filosófico (${filo2.autor}, ${filo2.obra}): "${filo2.maxima}"`
+        );
+      }
     }
 
     return {
       fecha: hoy,
       fechaTexto,
       filtro,
-      filtroLabel: FILTROS[filtro] || FILTROS.aleatorio,
+      filtroLabel: FILTROS[filtro] || FILTROS.filosofia,
       numerologiaDia: numInfo,
       resumenCorrientes: bloques.join('\n'),
       corrientesObj
@@ -253,6 +276,9 @@
       if (raw) {
         const parsed = JSON.parse(raw);
         state.settings = { ...state.settings, ...parsed, tema: 'naturaleza' };
+        if (!FILTROS[state.settings.filtro]) {
+          state.settings.filtro = 'filosofia';
+        }
       }
     } catch (e) {
       console.warn('Error leyendo settings:', e);
@@ -421,7 +447,7 @@
     });
 
     dom.canvasWrapper.style.aspectRatio = formato === '9:16' ? '9 / 16' : '4 / 5';
-    dom.streamSelect.value = filtro;
+    dom.streamSelect.value = FILTROS[filtro] ? filtro : 'filosofia';
     if (dom.toggleWebPulse) {
       dom.toggleWebPulse.checked = state.settings.webPulseEnabled !== false;
     }
@@ -462,13 +488,16 @@
   }
 
   async function renderInitialShowcase() {
-    const contexto = buildOracleContext('aleatorio');
+    const activeFiltro = FILTROS[state.settings.filtro] ? state.settings.filtro : 'filosofia';
+    const contexto = buildOracleContext(activeFiltro);
     const num = contexto.numerologiaDia;
     dom.numerologyPill.textContent = `Vibración del Día: ${num.numero} · ${num.titulo.split('·')[0].trim()}`;
 
     const isEphemerisMode = state.settings.modo === 'efemeride';
     const matchingHistory = state.history.find((h) =>
-      isEphemerisMode ? h.modo === 'efemeride' : h.modo !== 'efemeride'
+      isEphemerisMode
+        ? h.modo === 'efemeride'
+        : h.modo !== 'efemeride' && h.filtro === activeFiltro
     );
 
     if (matchingHistory) {
@@ -477,8 +506,8 @@
       return;
     }
 
-    if (isEphemerisMode) {
-      await invokeOracle({ forceLocal: false });
+    if (isEphemerisMode || activeFiltro !== 'filosofia') {
+      await invokeOracle({ forceLocal: !hasApiKey() });
       return;
     }
 
@@ -492,9 +521,9 @@
       palabras_clave: ['ritmo', 'claridad', 'amanecer'],
       atmosfera: 'amanecer',
       caption:
-        '🌅 CUANDO SIENTAS QUE LA TORMENTA NO TERMINA\n\nIncluso la noche más larga obedece al ritmo del universo y prepara en silencio la claridad de tu próximo amanecer.\n\nPresiona "✨ INVOCAR MENSAJE" para recibir una nueva palabra de esperanza y sabiduría con un fondo de naturaleza aleatorio.\n\n#Esperanza #OraculoCiberFilosofico #Estoicismo #Kybalion #LuzInterior',
-      filtro: 'aleatorio',
-      filtroLabel: 'Mensaje de Esperanza',
+        '🌅 CUANDO SIENTAS QUE LA TORMENTA NO TERMINA\n\nIncluso la noche más larga obedece al ritmo del universo y prepara en silencio la claridad de tu próximo amanecer.\n\nPresiona "✨ INVOCAR MENSAJE" para recibir una nueva palabra de esperanza y sabiduría con un fondo de naturaleza aleatorio.\n\n#Esperanza #OraculoCiberFilosofico #Filosofia #Estoicismo #Taoismo',
+      filtro: 'filosofia',
+      filtroLabel: 'Filosofía Universal',
       numeroDia: num.numero,
       imageDataUrl: null,
       artSource: 'procedural'
@@ -535,7 +564,13 @@
 
     const contexto = buildOracleContext(state.settings.filtro);
     const seenList = [state.currentOracle, ...state.history]
-      .filter((item) => item && item.gancho && item.frase)
+      .filter(
+        (item) =>
+          item &&
+          item.gancho &&
+          item.frase &&
+          (isEphemeris ? item.modo === 'efemeride' : item.modo !== 'efemeride' && item.filtro === state.settings.filtro)
+      )
       .map((item) => ({ gancho: item.gancho, frase: item.frase, ephemerisText: item.ephemerisText || '' }));
     contexto.recentMessages = seenList;
 
@@ -664,7 +699,11 @@
         }
       } else {
         let webPulse = null;
-        webAttempted = Boolean(state.settings.webPulseEnabled && global.OraculoWebPulse);
+        webAttempted = Boolean(
+          state.settings.webPulseEnabled &&
+            global.OraculoWebPulse &&
+            state.settings.filtro !== 'sabiduria_humana'
+        );
 
         if (webAttempted) {
           setLoading(true, '1/2 Conectando pulso web y buscando paisaje...');
@@ -1091,6 +1130,9 @@
     dom.streamSelect.addEventListener('change', () => {
       state.settings.filtro = dom.streamSelect.value;
       saveSettings();
+      if (state.settings.modo !== 'efemeride' && !state.isGenerating) {
+        invokeOracle({ forceLocal: !hasApiKey() });
+      }
     });
 
     if (dom.toggleWebPulse) {
