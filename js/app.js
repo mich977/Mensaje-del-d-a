@@ -19,6 +19,7 @@
 
   const { renderOracleCanvas, FORMAT_DIMENSIONS, ATMOSPHERE_PALETTES } = global.OraculoCanvas;
 
+  const APP_VERSION = 'v1.0.38';
   const STORAGE_SETTINGS_KEY = 'oraculo_cf_settings';
   const STORAGE_HISTORY_KEY = 'oraculo_cf_history';
   const STORAGE_QR_URL_KEY = 'oraculo_cf_public_url';
@@ -66,6 +67,7 @@
     dom.captionBox = document.getElementById('caption-preview');
     dom.artBadge = document.getElementById('art-source-badge');
     dom.numerologyPill = document.getElementById('daily-numerology-pill');
+    dom.appVersionBadge = document.getElementById('app-version-badge');
     dom.apiStatusPill = document.getElementById('api-status-pill');
 
     dom.btnModeEsperanza = document.getElementById('btn-mode-esperanza');
@@ -902,21 +904,37 @@
         const writable = await handle.createWritable();
         await writable.write(blob);
         await writable.close();
-        showToast('Imagen HD guardada en tu carpeta elegida.', 'success');
+        showToast('Imagen HD guardada en tu carpeta de fotos.', 'success');
         return;
       } catch (err) {
         if (err?.name === 'AbortError') return;
-        // Si el navegador bloquea el selector (ej. móvil o iframe), usar descarga estándar
+        // Si el navegador bloquea el selector (ej. móvil o iframe), usar alternativa
+      }
+    }
+
+    // En iPhone/iPad: la hoja nativa "Guardar imagen" la manda directo al carrete de Fotos
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent || '') ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if (isIOS && typeof navigator.share === 'function') {
+      try {
+        const file = new File([blob], fileName, { type: 'image/png' });
+        if (navigator.canShare?.({ files: [file] })) {
+          await navigator.share({ files: [file], title: fileName });
+          showToast('Toca "Guardar imagen" para enviarla a tu carrete de Fotos.', 'success');
+          return;
+        }
+      } catch (err) {
+        if (err?.name === 'AbortError') return;
       }
     }
 
     triggerLegacyBlobDownload(blob, fileName);
   }
 
-  async function shareToInstagramOrPhotos() {
+  async function shareToInstagram() {
     const exported = await getCanvasPngExport();
     if (!exported) {
-      if (state.currentOracle) showToast('No se pudo preparar la imagen para compartir.', 'error');
+      if (state.currentOracle) showToast('No se pudo preparar la imagen para Instagram.', 'error');
       return;
     }
 
@@ -935,18 +953,23 @@
           title: 'Seed & Soul',
           text: captionText
         });
-        showToast('¡Imagen enviada! El caption ya quedó copiado para pegarlo en Instagram.', 'success');
+        showToast('¡Imagen enviada a Instagram! El caption ya quedó copiado para pegarlo.', 'success');
         return;
       }
     } catch (err) {
       if (err?.name === 'AbortError') return;
-      console.warn('[Oráculo] Web Share omitido, usando guardado directo:', err);
+      console.warn('[Oráculo] Web Share para Instagram no disponible en este navegador:', err);
     }
 
-    await downloadCanvasHD();
-    if (captionText) {
-      showToast('Caption copiado al portapapeles y selector de guardado abierto.', 'info');
-    }
+    // Respaldo exclusivo para Instagram en navegador de escritorio sin Share de archivos
+    global.open('https://www.instagram.com/', '_blank', 'noopener,noreferrer');
+    showToast(
+      captionText
+        ? 'Se abrió Instagram y el caption quedó copiado. Si falta la foto, guárdala con "Guardar en Galería de Fotos".'
+        : 'Se abrió Instagram. Si aún no bajaste la foto, usa "Guardar en Galería de Fotos".',
+      'info',
+      6000
+    );
   }
 
   async function copyCaptionToClipboard() {
@@ -1136,7 +1159,7 @@
     dom.btnInvoke.addEventListener('click', () => invokeOracle({ forceLocal: false }));
     dom.btnDownload.addEventListener('click', downloadCanvasHD);
     if (dom.btnShareIg) {
-      dom.btnShareIg.addEventListener('click', shareToInstagramOrPhotos);
+      dom.btnShareIg.addEventListener('click', shareToInstagram);
     }
     dom.btnCopyCaption.addEventListener('click', copyCaptionToClipboard);
     if (dom.btnShuffleNature) {
@@ -1348,6 +1371,7 @@
 
   async function init() {
     cacheDom();
+    if (dom.appVersionBadge) dom.appVersionBadge.textContent = APP_VERSION;
     loadSettings();
     loadHistory();
     syncUIControls();

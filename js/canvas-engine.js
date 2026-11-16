@@ -469,13 +469,13 @@
   function drawVerticalSignature(ctx, H, firma) {
     const cleanFirma = (firma || 'By Michael_NB-γ').trim();
     ctx.save();
-    ctx.translate(46, H * 0.56);
+    ctx.translate(34, H - 96);
     ctx.rotate(-Math.PI / 2);
-    ctx.font = '500 19px "JetBrains Mono", monospace';
-    ctx.textAlign = 'center';
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.65)';
-    ctx.shadowBlur = 8;
-    ctx.fillStyle = 'rgba(241, 245, 249, 0.78)';
+    ctx.font = '500 16px "JetBrains Mono", monospace';
+    ctx.textAlign = 'left';
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.45)';
+    ctx.shadowBlur = 5;
+    ctx.fillStyle = 'rgba(241, 245, 249, 0.52)';
     ctx.fillText(cleanFirma, 0, 0);
     ctx.restore();
   }
