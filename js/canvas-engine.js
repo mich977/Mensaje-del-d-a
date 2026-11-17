@@ -467,11 +467,12 @@
   }
 
   function drawVerticalSignature(ctx, H, firma) {
-    const cleanFirma = (firma || 'By Michael_NB-γ').trim();
+    const cleanFirma = (firma || 'By מיכאל_NB - γ').trim();
     ctx.save();
     ctx.translate(34, H - 96);
     ctx.rotate(-Math.PI / 2);
-    ctx.font = '500 16px "JetBrains Mono", monospace';
+    ctx.font = '500 16px "JetBrains Mono", "Segoe UI", "Roboto", sans-serif';
+    ctx.direction = 'ltr';
     ctx.textAlign = 'left';
     ctx.shadowColor = 'rgba(0, 0, 0, 0.45)';
     ctx.shadowBlur = 5;

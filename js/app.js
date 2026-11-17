@@ -19,7 +19,9 @@
 
   const { renderOracleCanvas, FORMAT_DIMENSIONS, ATMOSPHERE_PALETTES } = global.OraculoCanvas;
 
-  const APP_VERSION = 'v1.0.39';
+  const APP_VERSION = 'v1.0.41';
+  const DEFAULT_FIRMA = 'By מיכאל_NB - γ';
+  const LEGACY_DEFAULT_FIRMAS = new Set(['By Michael_NB-γ', 'Seed&soul_MNB - γ']);
   const STORAGE_SETTINGS_KEY = 'oraculo_cf_settings';
   const STORAGE_HISTORY_KEY = 'oraculo_cf_history';
   const STORAGE_QR_URL_KEY = 'oraculo_cf_public_url';
@@ -40,7 +42,7 @@
       modo: 'esperanza',
       efemerideEnfoque: 'mixto',
       formato: '4:5',
-      firma: 'By Michael_NB-γ',
+      firma: DEFAULT_FIRMA,
       filtro: 'filosofia',
       webPulseEnabled: true
     },
@@ -282,6 +284,10 @@
         state.settings = { ...state.settings, ...parsed, tema: 'naturaleza' };
         if (!FILTROS[state.settings.filtro]) {
           state.settings.filtro = 'filosofia';
+        }
+        if (!state.settings.firma || LEGACY_DEFAULT_FIRMAS.has(state.settings.firma)) {
+          state.settings.firma = DEFAULT_FIRMA;
+          saveSettings();
         }
       }
     } catch (e) {
@@ -1032,7 +1038,7 @@
 
   function openSettingsModal() {
     dom.inputApiKey.value = getApiKey();
-    dom.inputSignature.value = state.settings.firma || 'By Michael_NB-γ';
+    dom.inputSignature.value = state.settings.firma || DEFAULT_FIRMA;
     showApiKeyFeedback('');
     syncUIControls();
     dom.settingsModal.classList.remove('hidden');
@@ -1342,7 +1348,7 @@
       }
 
       setApiKey(rawKey);
-      const sig = dom.inputSignature.value.trim() || 'By Michael_NB-γ';
+      const sig = dom.inputSignature.value.trim() || DEFAULT_FIRMA;
       state.settings.firma = sig;
       saveSettings();
       syncUIControls();
