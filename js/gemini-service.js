@@ -16,6 +16,38 @@
 
   const VALID_ATMOSPHERES = ['amanecer', 'aurora', 'fortaleza', 'renacimiento', 'serenidad', 'cosmos'];
 
+  const HASHTAG_PRESETS = {
+    filosofia: '#Filosofia #Reflexiones #Sabiduria #CrecimientoPersonal #Motivacion',
+    taoismo: '#Taoismo #PazInterior #Mindfulness #Sabiduria #Espiritualidad',
+    estoicismo: '#Estoicismo #MarcoAurelio #Mentalidad #Disciplina #CrecimientoPersonal',
+    kybalion: '#Kybalion #LeyesUniversales #LeyDeAtraccion #DespertarEspiritual #Conciencia',
+    sabiduria_humana: '#Sabiduria #Reflexiones #Esperanza #Gratitud #VidaConsciente',
+    esperanza_general: '#Esperanza #Reflexiones #Motivacion #Resiliencia #CrecimientoPersonal',
+    efemeride_chile: '#Chile #EfemeridesDeChile #HistoriaDeChile #CulturaChilena #TalDiaComoHoy',
+    efemeride_mundial: '#Historia #CulturaGeneral #SabiasQue #Efemerides #Conciencia'
+  };
+
+  function enforceMaxHashtags(caption, maxHashtags = 5) {
+    const text = String(caption || '').trim();
+    if (!text) return '';
+    const seen = new Set();
+    let kept = 0;
+    const cleaned = text.replace(/(^|\s)(#[A-Za-zÀ-ÖØ-öø-ÿ0-9_]+)/g, (match, prefix, tag) => {
+      const key = tag.toLowerCase();
+      if (seen.has(key) || kept >= maxHashtags) {
+        return prefix === '\n' ? '\n' : '';
+      }
+      seen.add(key);
+      kept += 1;
+      return `${prefix}${tag}`;
+    });
+    return cleaned
+      .replace(/[ \t]{2,}/g, ' ')
+      .replace(/[ \t]+\n/g, '\n')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+  }
+
   let memoryApiKey = '';
   let imageDisabledForKey = '';
   let discoveredCache = {
@@ -369,12 +401,12 @@ DEVUELVE SOLO JSON VÁLIDO CON ESTOS 5 CAMPOS:
 5. "caption": Texto breve en español listo para redes (${
       isAuthorQuoteMode
         ? isSabHumMode
-          ? `gancho con emoji 🕊️ + breve parábola o reflexión humana sin tono confesional ni dogmas + 1 gesto concreto para ser mejor persona hoy + pregunta cercana + 5 hashtags (#SabiduriaHumana #Humanidad #Empatia #Esperanza #VidaConsciente)`
-          : `gancho con emoji ${isStoicMode ? '🏛️' : isKybalionMode ? '🔺' : '🦉'} + cita literal "${philosopherObj.maxima}" atribuida a ${philosopherObj.autor} (${philosopherObj.obra}) + 2 párrafos concretos para volver a la humanidad más humana hoy + pregunta para comentar + 5 hashtags (${isStoicMode ? '#Estoicismo #Humanidad #MarcoAurelio #Seneca #Epicteto' : isKybalionMode ? '#LeyesUniversales #Kybalion #HermesTrismegisto #NevilleGoddard #Conciencia' : '#Filosofia #Sabiduria #Humanidad #PensamientoCritico #Esperanza'})`
+          ? `gancho con emoji 🕊️ + breve parábola o reflexión humana sin tono confesional ni dogmas + 1 gesto concreto para ser mejor persona hoy + pregunta cercana + MÁXIMO 5 hashtags de alto alcance en Instagram (usa como base: ${HASHTAG_PRESETS.sabiduria_humana})`
+          : `gancho con emoji ${isStoicMode ? '🏛️' : isKybalionMode ? '🔺' : '🦉'} + cita literal "${philosopherObj.maxima}" atribuida a ${philosopherObj.autor} (${philosopherObj.obra}) + 2 párrafos concretos para volver a la humanidad más humana hoy + pregunta para comentar + MÁXIMO 5 hashtags de mayor alcance y seguidores en Instagram (usa como base: ${isStoicMode ? HASHTAG_PRESETS.estoicismo : isKybalionMode ? HASHTAG_PRESETS.kybalion : HASHTAG_PRESETS.filosofia})`
         : isTaoMode
-          ? 'gancho con emoji ☯️ + nombra al maestro (Laozi / Zhuangzi / Liezi / Wang Chongyang / Maestros Celestiales) + narra su historia corta o frase real + conecta esa calma con quienes hoy solo ven prisa en redes/TikTok + pregunta para comentar + 5 hashtags (#Taoismo #Laozi #Zhuangzi #Liezi #EsperanzaReal)'
-          : 'gancho con emoji + 2 párrafos concretos conectando la metáfora con la sabiduría de hoy + pregunta para comentar + 5 hashtags variados'
-    }).`;
+          ? `gancho con emoji ☯️ + nombra al maestro (Laozi / Zhuangzi / Liezi / Wang Chongyang / Maestros Celestiales) + narra su historia corta o frase real + conecta esa calma con quienes hoy solo ven prisa en redes/TikTok + pregunta para comentar + MÁXIMO 5 hashtags de alto alcance en Instagram (usa como base: ${HASHTAG_PRESETS.taoismo})`
+          : `gancho con emoji + 2 párrafos concretos conectando la metáfora con la sabiduría de hoy + pregunta para comentar + MÁXIMO 5 hashtags populares de alto alcance (ej. ${HASHTAG_PRESETS.esperanza_general})`
+    }). IMPORTANTE: nunca incluyas más de 5 hashtags en "caption".`;
   }
 
   function normalizeOraclePayload(raw) {
@@ -407,7 +439,7 @@ DEVUELVE SOLO JSON VÁLIDO CON ESTOS 5 CAMPOS:
         'Golden hopeful sunrise breaking over tranquil misty horizon, contemplative sage looking toward warm light, atmospheric background, no text'
     ).trim();
 
-    const caption = String(raw.caption || `${gancho}\n\n${frase}`).trim();
+    const caption = enforceMaxHashtags(String(raw.caption || `${gancho}\n\n${frase}`), 5);
 
     return { gancho, frase, palabras_clave: palabras, atmosfera, prompt_arte, caption };
   }
@@ -632,8 +664,8 @@ DEVUELVE SOLO JSON VÁLIDO CON ESTOS 5 CAMPOS:
       ? `"CHILE · TAL DÍA COMO HOY${ephemerisItem?.year ? ` (${ephemerisItem.year})` : ''}" o nombre breve de la efeméride chilena`
       : `"TAL DÍA COMO HOY · ${ephemerisItem?.year || 'EFEMÉRIDE'}" o el nombre breve del Día Mundial`;
     const hashtagsHint = isChile
-      ? '#EfemeridesDeChile #Chile #HistoriaDeChile #TalDiaComoHoy #CulturaChilena'
-      : '#EfemeridesDeHoy #TalDiaComoHoy #HistoriaMundial #ConcienciaGlobal #Cultura';
+      ? HASHTAG_PRESETS.efemeride_chile
+      : HASHTAG_PRESETS.efemeride_mundial;
 
     return `Eres un cronista cultural y humanista. Transforma este hecho REAL de hoy (${contexto.fechaTexto}) en una tarjeta visual elegante, veraz e inspiradora para redes sociales.
 
@@ -650,7 +682,7 @@ DEVUELVE SOLO JSON VÁLIDO:
    - Encabezado con emoji (${isChile ? '🇨🇱 o 📅' : '📅 o 🌍'}) y el título del día/hecho.
    - 2 párrafos breves contando por qué este hecho o día importa hoy.
    - Pregunta breve para conversar en comentarios.
-   - 5 hashtags relevantes (${hashtagsHint}).`;
+   - MÁXIMO 5 hashtags relevantes de alto alcance en Instagram (usa como base: ${hashtagsHint}). Nunca excedas 5 hashtags.`;
   }
 
   async function generateEphemerisCard(ephemerisItem, contexto) {
@@ -869,7 +901,7 @@ DEVUELVE SOLO JSON VÁLIDO:
         defaultAtm: 'fortaleza',
         emoji: '🏛️',
         label: 'Enseñanza estoica',
-        hashtags: '#Estoicismo #Humanidad #MarcoAurelio #Seneca #Epicteto #ZenonDeCitio #SabiduriaEstoica'
+        hashtags: HASHTAG_PRESETS.estoicismo
       });
     }
 
@@ -883,7 +915,7 @@ DEVUELVE SOLO JSON VÁLIDO:
         defaultAtm: 'amanecer',
         emoji: '🦉',
         label: 'Enseñanza filosófica',
-        hashtags: '#Filosofia #Humanidad #Socrates #Aristoteles #Kant #HannahArendt #EckhartTolle'
+        hashtags: HASHTAG_PRESETS.filosofia
       });
     }
 
@@ -936,7 +968,7 @@ DEVUELVE SOLO JSON VÁLIDO:
         defaultAtm: 'amanecer',
         emoji: '🕊️',
         label: 'Sabiduría práctica',
-        hashtags: '#SabiduriaHumana #Humanidad #Empatia #Esperanza #VidaConsciente #OraculoCiberFilosofico'
+        hashtags: HASHTAG_PRESETS.sabiduria_humana
       });
     }
 
@@ -960,7 +992,7 @@ DEVUELVE SOLO JSON VÁLIDO:
           defaultAtm: 'cosmos',
           emoji: '🔺',
           label: 'Ley Universal',
-          hashtags: '#LeyesUniversales #Kybalion #HermesTrismegisto #NevilleGoddard #WayneDyer #JoeDispenza #Humanidad'
+          hashtags: HASHTAG_PRESETS.kybalion
         });
       }
     }
@@ -979,7 +1011,7 @@ DEVUELVE SOLO JSON VÁLIDO:
           `☯️ ${liveTao.autor} (${liveTao.obra})\n\n"${liveTao.maxima}"\n\n` +
           `🌿 Frente a la prisa y al ruido de las pantallas, estas palabras devuelven calma, raíz y esperanza real hoy.\n` +
           `🔗 Fuente Wikiquote: ${liveTao.sourceUrl}\n\n` +
-          `#Taoismo #Laozi #Zhuangzi #Liezi #WangChongyang #MaestrosCelestiales #EsperanzaReal`;
+          HASHTAG_PRESETS.taoismo;
         return {
           gancho: ganchoLive,
           frase: liveTao.maxima,
@@ -1002,7 +1034,7 @@ DEVUELVE SOLO JSON VÁLIDO:
         `📖 ${pickedTao.historia}\n\n` +
         `💡 Esperanza para hoy: ${pickedTao.ensenanza}\n\n` +
         `Guarda esta imagen si hoy necesitabas bajar el ruido y volver a lo real. ¿Qué maestro te resonó más?\n\n` +
-        `#Taoismo #Laozi #Zhuangzi #Liezi #WangChongyang #MaestrosCelestiales #HistoriasCortas`;
+        HASHTAG_PRESETS.taoismo;
 
       return {
         gancho: ganchoTao,
@@ -1124,7 +1156,7 @@ DEVUELVE SOLO JSON VÁLIDO:
     const webNote = contexto.webPulse?.summaryText
       ? `\n\n🌐 Pulso del mundo hoy: ${contexto.webPulse.summaryText.split('\n')[0]}`
       : '';
-    const caption = `✨ ${picked.gancho}\n\n${picked.frase}\n\n${picked.caption_cuerpo}${webNote}\n\n🌅 Vibración de hoy (${num.numero}): ${num.consejo}\n\nSi este mensaje llegó justo cuando lo necesitabas, guarda esta imagen o compártela con alguien que hoy necesite un poco de luz.\n\n#Esperanza #OraculoCiberFilosofico #Estoicismo #Kybalion #LuzInterior #Resiliencia #Numerologia`;
+    const caption = `✨ ${picked.gancho}\n\n${picked.frase}\n\n${picked.caption_cuerpo}${webNote}\n\n🌅 Vibración de hoy (${num.numero}): ${num.consejo}\n\nSi este mensaje llegó justo cuando lo necesitabas, guarda esta imagen o compártela con alguien que hoy necesite un poco de luz.\n\n${HASHTAG_PRESETS.esperanza_general}`;
 
     return {
       gancho: picked.gancho,
@@ -1205,8 +1237,8 @@ DEVUELVE SOLO JSON VÁLIDO:
     const extraContext = ephemerisItem?.extract ? `\n\n📖 Contexto: ${ephemerisItem.extract}` : '';
     const sourceLine = ephemerisItem?.sourceUrl ? `\n🔗 Fuente: ${ephemerisItem.sourceUrl}` : '';
     const caption = isChile
-      ? `🇨🇱 ${gancho} (${contexto.fechaTexto})\n\n${rawText}${extraContext}${sourceLine}\n\n🏔️ Recordar la historia y el pulso vivo de Chile nos invita a construir un mejor presente juntos. ¿Conocías este hecho?\n\n#EfemeridesDeChile #Chile #HistoriaDeChile #TalDiaComoHoy #CulturaChilena`
-      : `📅 ${gancho} (${contexto.fechaTexto})\n\n${rawText}${extraContext}${sourceLine}\n\n🌍 Cada fecha guarda memoria colectiva que nos invita a mirar el presente con mayor conciencia. ¿Conocías este dato de hoy?\n\n#EfemeridesDeHoy #TalDiaComoHoy #CulturaGeneral #HistoriaMundial #ConcienciaGlobal`;
+      ? `🇨🇱 ${gancho} (${contexto.fechaTexto})\n\n${rawText}${extraContext}${sourceLine}\n\n🏔️ Recordar la historia y el pulso vivo de Chile nos invita a construir un mejor presente juntos. ¿Conocías este hecho?\n\n${HASHTAG_PRESETS.efemeride_chile}`
+      : `📅 ${gancho} (${contexto.fechaTexto})\n\n${rawText}${extraContext}${sourceLine}\n\n🌍 Cada fecha guarda memoria colectiva que nos invita a mirar el presente con mayor conciencia. ¿Conocías este dato de hoy?\n\n${HASHTAG_PRESETS.efemeride_mundial}`;
 
     return {
       gancho,

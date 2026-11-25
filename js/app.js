@@ -19,7 +19,7 @@
 
   const { renderOracleCanvas, FORMAT_DIMENSIONS, ATMOSPHERE_PALETTES } = global.OraculoCanvas;
 
-  const APP_VERSION = 'v1.0.43';
+  const APP_VERSION = 'v1.0.44';
   const DEFAULT_FIRMA = 'By מיכאל_NB - γ';
   const LEGACY_DEFAULT_FIRMAS = new Set(['By Michael_NB-γ', 'Seed&soul_MNB - γ']);
   const STORAGE_SETTINGS_KEY = 'oraculo_cf_settings';

@@ -6,8 +6,8 @@
  *  - API de Google Gemini: Network-Only (nunca cachear respuestas generativas en SW)
  */
 
-const CACHE_VERSION = 'oraculo-cf-v1.0.43';
-const RUNTIME_CACHE = 'oraculo-cf-runtime-v1.0.43';
+const CACHE_VERSION = 'oraculo-cf-v1.0.44';
+const RUNTIME_CACHE = 'oraculo-cf-runtime-v1.0.44';
 
 const APP_SHELL_ASSETS = [
   './',
