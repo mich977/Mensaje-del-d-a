@@ -922,6 +922,156 @@ window.SABIDURIA_DATA = {
       }
     ]
   },
+  "inteligencia_emocional": {
+    "nombre": "Inteligencia Emocional y Autoconocimiento",
+    "descripcion": "Autoconciencia, autorregulación, agilidad emocional, autocompasión, comunicación no violenta y empatía práctica.",
+    "ensenanzas": [
+      {
+        "id": "emo_goleman_autoconciencia",
+        "autor": "Daniel Goleman",
+        "obra": "Inteligencia Emocional · Autoconciencia",
+        "pilar": "Autoconciencia",
+        "gancho_sugerido": "NOMBRAR LO QUE SIENTES ES EL PRIMER PASO",
+        "maxima": "El conocimiento de uno mismo, la capacidad de reconocer un sentimiento en el mismo momento en que aparece, constituye la piedra angular de la inteligencia emocional.",
+        "historia": "Antes de intentar cambiar una reacción impulsiva, observar en silencio qué emoción exacta acaba de encenderse te devuelve el timón de tus decisiones.",
+        "ensenanza": "Darte cuenta de lo que sientes mientras lo sientes evita que actúes en piloto automático.",
+        "aplicacion_practica": "Haz una pausa de diez segundos hoy y nombra en voz baja exactamente qué estás sintiendo.",
+        "atmosfera": "serenidad"
+      },
+      {
+        "id": "emo_goleman_autorregulacion",
+        "autor": "Daniel Goleman",
+        "obra": "Inteligencia Emocional · Autorregulación",
+        "pilar": "Autorregulación",
+        "gancho_sugerido": "NO ALIMENTES EL FUEGO DE LA IRA",
+        "maxima": "Los pensamientos obsesivos son la leña que alimenta el fuego de la ira, un fuego que solo podrá extinguirse contemplando las cosas desde un punto de vista diferente.",
+        "historia": "Cuando repetimos mentalmente una ofensa, el cuerpo vuelve a vivir la amenaza como si ocurriera otra vez; cambiar de perspectiva apaga la escalada.",
+        "ensenanza": "Regular la mente es cuestionar el relato repetitivo antes de convertirlo en discusión.",
+        "aplicacion_practica": "Si algo te molesta hoy, pregúntate qué parte es un hecho real y qué parte es suposición tuya.",
+        "atmosfera": "fortaleza"
+      },
+      {
+        "id": "emo_goleman_empatia",
+        "autor": "Daniel Goleman",
+        "obra": "Inteligencia Emocional · Empatía y Atención",
+        "pilar": "Empatía",
+        "gancho_sugerido": "ESCUCHAR DE VERDAD CREA PUENTES REALES",
+        "maxima": "El simple hecho de prestar atención establece una conexión emocional en cuya ausencia la empatía es imposible.",
+        "historia": "En medio de pantallas y prisa, mirar a alguien sin interrumpir ni preparar tu respuesta se volvió uno de los gestos más escasos y sanadores.",
+        "ensenanza": "La empatía empieza cuando regalas tu presencia completa antes de ofrecer soluciones.",
+        "aplicacion_practica": "En tu próxima conversación, suelta el teléfono y escucha sin interrumpir durante dos minutos.",
+        "atmosfera": "aurora"
+      },
+      {
+        "id": "emo_frankl_libertad",
+        "autor": "Viktor Frankl",
+        "obra": "El hombre en busca de sentido",
+        "pilar": "Pausa Consciente",
+        "gancho_sugerido": "TU ÚLTIMA LIBERTAD ESTÁ EN CÓMO RESPONDES",
+        "maxima": "Al ser humano se le puede arrebatar todo salvo una cosa: la última de las libertades humanas, elegir la actitud ante cualquier conjunto de circunstancias.",
+        "historia": "Incluso en las condiciones más extremas, Viktor Frankl descubrió que entre lo que nos ocurre y lo que hacemos siempre existe un margen interior de elección.",
+        "ensenanza": "No siempre eliges lo que pasa afuera, pero sí eliges desde qué dignidad y calma vas a responder.",
+        "aplicacion_practica": "Ante un imprevisto difícil hoy, respira antes de contestar y elige tu respuesta con conciencia.",
+        "atmosfera": "amanecer"
+      },
+      {
+        "id": "emo_rogers_aceptacion",
+        "autor": "Carl Rogers",
+        "obra": "El proceso de convertirse en persona",
+        "pilar": "Aceptación y Congruencia",
+        "gancho_sugerido": "ACEPTAR LO QUE SIENTES TE PERMITE AVANZAR",
+        "maxima": "Cuando acepto con honestidad mis propios sentimientos de miedo, desaliento, ira o afecto, recién entonces puedo transformarme y seguir adelante.",
+        "historia": "Luchar contra lo que sentimos o fingir que nada duele nos deja inmóviles; la aceptación honesta abre la puerta al cambio real.",
+        "ensenanza": "No necesitas ser perfecto para cuidarte: reconocer tu fragilidad te vuelve más auténtico y sereno.",
+        "aplicacion_practica": "Permítete sentir hoy sin juzgarte durante cinco minutos eso que venías evitando.",
+        "atmosfera": "renacimiento"
+      },
+      {
+        "id": "emo_brown_vulnerabilidad",
+        "autor": "Brené Brown",
+        "obra": "El poder de la vulnerabilidad",
+        "pilar": "Coraje Emocional",
+        "gancho_sugerido": "MOSTRARTE HUMANO NO ES DEBILIDAD",
+        "maxima": "La vulnerabilidad no es ganar o perder; es tener el valor de presentarse y mostrarse real cuando no puedes controlar el resultado.",
+        "historia": "Solemos confundir coraza con fortaleza, pero abrir conversaciones honestas y pedir ayuda requiere mucho más valor que esconderse.",
+        "ensenanza": "La verdadera fortaleza emocional nace de mostrarte sincero y presente aun con incertidumbre.",
+        "aplicacion_practica": "Comparte hoy con alguien de confianza cómo te sientes de verdad, sin disfrazar tu cansancio.",
+        "atmosfera": "aurora"
+      },
+      {
+        "id": "emo_brackett_ruler",
+        "autor": "Marc Brackett",
+        "obra": "Permiso para sentir (Modelo RULER)",
+        "pilar": "Alfabetización Emocional",
+        "gancho_sugerido": "LAS EMOCIONES SON DATOS PARA ESCUCHAR",
+        "maxima": "Las emociones no son buenas ni malas, son información; el objetivo no es reprimir lo que duele, sino aprender a entenderlo y regularlo con sabiduría.",
+        "historia": "El modelo RULER enseña a reconocer, comprender, etiquetar, expresar y regular lo que sentimos para dejar de pelear con nuestro mundo interno.",
+        "ensenanza": "Cuando entiendes qué mensaje trae tu emoción, deja de arrastrarte y empieza a orientarte.",
+        "aplicacion_practica": "Pregúntate hoy qué necesidad o límite te está señalando tu incomodidad actual.",
+        "atmosfera": "cosmos"
+      },
+      {
+        "id": "emo_david_agilidad",
+        "autor": "Susan David",
+        "obra": "Agilidad Emocional",
+        "pilar": "Agilidad Emocional",
+        "gancho_sugerido": "SENTIR ALGO DIFÍCIL NO ES UNA ORDEN",
+        "maxima": "Las emociones son datos valiosos, no directrices absolutas; sentir una emoción difícil no significa que debas dejar que te gobierne.",
+        "historia": "Frente a la positividad forzada, la agilidad emocional propone mirar el miedo o la tristeza con curiosidad, dar un paso atrás y elegir según tus valores.",
+        "ensenanza": "Tú no eres tu tormenta pasajera; eres la conciencia que la observa y decide el siguiente paso.",
+        "aplicacion_practica": "Cambia la frase «estoy ansioso» por «noto que estoy sintiendo ansiedad en este momento».",
+        "atmosfera": "serenidad"
+      },
+      {
+        "id": "emo_neff_autocompasion",
+        "autor": "Kristin Neff",
+        "obra": "Sé amable contigo mismo",
+        "pilar": "Autocompasión",
+        "gancho_sugerido": "HÁBLATE COMO LE HABLARÍAS A QUIEN AMAS",
+        "maxima": "La autocompasión consiste en tratarse a uno mismo con la misma amabilidad, gentileza y comprensión que ofreceríamos a un amigo querido en un día duro.",
+        "historia": "Muchas veces somos nuestro juez más cruel cuando tropezamos, olvidando que el dolor forma parte compartida de toda experiencia humana.",
+        "ensenanza": "Cuidar tu diálogo interior en los errores te levanta más rápido que la culpa constante.",
+        "aplicacion_practica": "Cuando te equivoques hoy, reemplaza el reproche por una frase amable que le dirías a un buen amigo.",
+        "atmosfera": "amanecer"
+      },
+      {
+        "id": "emo_rosenberg_cnv",
+        "autor": "Marshall Rosenberg",
+        "obra": "Comunicación No Violenta",
+        "pilar": "Habilidades Sociales",
+        "gancho_sugerido": "HABLA DESDE LO QUE SIENTES, NO DESDE EL ATAQUE",
+        "maxima": "Cuanto más conectemos con nuestros propios sentimientos y necesidades reales, más fácil será que los demás respondan con empatía y sin ponerse a la defensiva.",
+        "historia": "Detrás de muchos gritos o silencios fríos hay una necesidad humana no expresada buscando respeto, calma o escucha.",
+        "ensenanza": "Expresar lo que necesitas sin acusar al otro transforma discusiones en acuerdos honestos.",
+        "aplicacion_practica": "En lugar de acusar con un «tú siempre», expresa hoy con calma cómo te sentiste y qué necesitas.",
+        "atmosfera": "serenidad"
+      },
+      {
+        "id": "emo_linehan_aceptacion",
+        "autor": "Marsha Linehan",
+        "obra": "Terapia Dialéctico-Conductual · Mente Sabia",
+        "pilar": "Aceptación Radical",
+        "gancho_sugerido": "ACEPTAR NO ES RENDIRSE, ES DEJAR DE PELEAR",
+        "maxima": "La vida puede valer la pena ser vivida incluso cuando hay dolor; el sufrimiento crece cuando resistimos la realidad y se alivia al aceptarla para actuar.",
+        "historia": "La mente sabia une la razón práctica con la sensibilidad emocional para sostener el presente tal como es antes de construir el siguiente paso.",
+        "ensenanza": "Dejar de pelear contra lo que ya ocurrió libera la energía que necesitas para cuidar tu presente.",
+        "aplicacion_practica": "Suelta hoy la pregunta «¿por qué pasó esto?» y pregúntate «¿qué paso pequeño puedo dar ahora?».",
+        "atmosfera": "renacimiento"
+      },
+      {
+        "id": "emo_puig_pausa",
+        "autor": "Mario Alonso Puig",
+        "obra": "Neurociencia y Gestión Emocional",
+        "pilar": "Pausa y Claridad",
+        "gancho_sugerido": "UN MINUTO DE PAUSA CAMBIA TODO TU DÍA",
+        "maxima": "Crear espacios de pausa en nuestra vida cotidiana devuelve al cerebro la claridad, la escucha y la perspectiva que el estrés constante le roba.",
+        "historia": "Cuando vivimos acelerados, la mente interpreta cada problema como una amenaza urgente; desacelerar activa de nuevo la lucidez y la empatía.",
+        "ensenanza": "Frenar unos minutos al día no es perder el tiempo: es recuperar tu serenidad y criterio.",
+        "aplicacion_practica": "Regálate hoy tres respiraciones lentas mirando por una ventana antes de cambiar de tarea.",
+        "atmosfera": "cosmos"
+      }
+    ]
+  },
   "numerologia": {
     "nombre": "Numerología Pitagórica y Vibracional",
     "descripcion": "Arquetipos numéricos del 1 al 9 y números maestros 11, 22 y 33 que revelan la frecuencia simbólica del día.",

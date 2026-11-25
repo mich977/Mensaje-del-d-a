@@ -19,7 +19,7 @@
 
   const { renderOracleCanvas, FORMAT_DIMENSIONS, ATMOSPHERE_PALETTES } = global.OraculoCanvas;
 
-  const APP_VERSION = 'v1.0.44';
+  const APP_VERSION = 'v1.0.45';
   const DEFAULT_FIRMA = 'By מיכאל_NB - γ';
   const LEGACY_DEFAULT_FIRMAS = new Set(['By Michael_NB-γ', 'Seed&soul_MNB - γ']);
   const STORAGE_SETTINGS_KEY = 'oraculo_cf_settings';
@@ -32,7 +32,8 @@
     taoismo: 'Taoísmo & Historias Cortas',
     estoicismo: 'Estoicismo',
     kybalion: 'Leyes Universales & Kybalion',
-    sabiduria_humana: 'Sabiduría Humana & Parábolas'
+    sabiduria_humana: 'Sabiduría Humana & Parábolas',
+    inteligencia_emocional: 'Inteligencia Emocional'
   };
 
   const state = {
@@ -204,12 +205,24 @@
     const sabHumPool = db.sabiduria_humana?.ensenanzas || [];
     const sabHum = pickRandom(sabHumPool);
     const sabHum2 = pickRandom(sabHumPool.filter((h) => h.id !== sabHum?.id));
+    const emoPool = db.inteligencia_emocional?.ensenanzas || [];
+    const emo = pickRandom(emoPool);
+    const emo2 = pickRandom(emoPool.filter((e) => e.id !== emo?.id));
     const elemento = pickRandom(db.astrologia_historia.elementos);
 
     const bloques = [];
     const corrientesObj = {};
 
-    if (filtro === 'sabiduria_humana' && sabHum) {
+    if (filtro === 'inteligencia_emocional' && emo) {
+      corrientesObj.inteligenciaEmocional = emo;
+      corrientesObj.inteligenciaEmocionalPool = emoPool;
+      bloques.push(
+        `- Inteligencia Emocional (${emo.autor} · ${emo.obra} · Pilar ${emo.pilar}): "${emo.maxima}". Contexto: ${emo.historia}. Práctica: ${emo.aplicacion_practica}`
+      );
+      if (emo2) {
+        bloques.push(`- Eco Emocional (${emo2.autor}): "${emo2.maxima}"`);
+      }
+    } else if (filtro === 'sabiduria_humana' && sabHum) {
       corrientesObj.sabiduriaHumana = sabHum;
       corrientesObj.sabiduriaHumanaPool = sabHumPool;
       bloques.push(

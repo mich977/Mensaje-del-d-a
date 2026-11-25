@@ -22,6 +22,7 @@
     estoicismo: '#Estoicismo #MarcoAurelio #Mentalidad #Disciplina #CrecimientoPersonal',
     kybalion: '#Kybalion #LeyesUniversales #LeyDeAtraccion #DespertarEspiritual #Conciencia',
     sabiduria_humana: '#Sabiduria #Reflexiones #Esperanza #Gratitud #VidaConsciente',
+    inteligencia_emocional: '#InteligenciaEmocional #Autoconocimiento #SaludMental #BienestarEmocional #CrecimientoPersonal',
     esperanza_general: '#Esperanza #Reflexiones #Motivacion #Resiliencia #CrecimientoPersonal',
     efemeride_chile: '#Chile #EfemeridesDeChile #HistoriaDeChile #CulturaChilena #TalDiaComoHoy',
     efemeride_mundial: '#Historia #CulturaGeneral #SabiasQue #Efemerides #Conciencia'
@@ -300,6 +301,7 @@
     const isFiloMode = contexto.filtro === 'filosofia';
     const isKybalionMode = contexto.filtro === 'kybalion';
     const isSabHumMode = contexto.filtro === 'sabiduria_humana';
+    const isEmoMode = contexto.filtro === 'inteligencia_emocional';
     const recentFrasesSet = new Set(
       recentList.map((m) => String(m.frase || '').toLowerCase().slice(0, 48))
     );
@@ -314,7 +316,9 @@
         ? pickLiveIfFresh(contexto.webPulse?.filosofiaQuote)
         : isKybalionMode
           ? pickLiveIfFresh(contexto.webPulse?.kybalionQuote)
-          : null;
+          : isEmoMode
+            ? pickLiveIfFresh(contexto.webPulse?.emoQuote)
+            : null;
     const philosopherObj = isStoicMode
       ? liveQuote || contexto.corrientesObj?.estoicismo
       : isFiloMode
@@ -323,8 +327,10 @@
           ? liveQuote || contexto.corrientesObj?.kybalionMaestro
           : isSabHumMode
             ? contexto.corrientesObj?.sabiduriaHumana
-            : null;
-    const isAuthorQuoteMode = (isStoicMode || isFiloMode || isKybalionMode || isSabHumMode) && Boolean(philosopherObj);
+            : isEmoMode
+              ? liveQuote || contexto.corrientesObj?.inteligenciaEmocional
+              : null;
+    const isAuthorQuoteMode = (isStoicMode || isFiloMode || isKybalionMode || isSabHumMode || isEmoMode) && Boolean(philosopherObj);
 
     const taoBlock = isTaoMode
       ? `\nENFOQUE ESPECIAL TAOÍSTA REAL (Laozi / Zhuangzi / Lie Yukou / Wang Chongyang / Maestros Celestiales Tianshi):\n${
@@ -344,12 +350,16 @@
         ? 'MAESTROS DE LAS LEYES UNIVERSALES'
         : isSabHumMode
           ? 'SABIDURÍA HUMANA SIN DOGMAS (PARÁBOLAS DE JESÚS, ECLESIASTÉS Y PROVERBIOS — LENGUAJE CERCANO NO RELIGIOSO)'
-          : 'FILOSOFÍA UNIVERSAL REAL';
+          : isEmoMode
+            ? 'INTELIGENCIA EMOCIONAL REAL Y REGULACIÓN CONSCIENTE (GOLEMAN, FRANKL, ROGERS, BROWN, BRACKETT, DAVID, NEFF, ROSENBERG, LINEHAN)'
+            : 'FILOSOFÍA UNIVERSAL REAL';
     const authorBlock = isAuthorQuoteMode
       ? `\nENFOQUE ESTRICTO DE ${authorLabel} (${
           isSabHumMode
             ? 'USA LENGUAJE HUMANO Y CERCANO PARA CREYENTES Y NO CREYENTES, SIN SERMONES, SIN DOGMAS NI ETIQUETAS RELIGIOSAS; ENFÓCATE EN LO QUE HACES VUELVE, EMPATÍA, PERDÓN Y PAZ'
-            : 'PROHIBIDO INVENTAR CITAS NI USAR METÁFORAS AJENAS'
+            : isEmoMode
+              ? 'VALIDA LAS EMOCIONES SIN POSITIVIDAD TÓXICA; EXPLICA CON EMPATÍA CÓMO PAUSAR, NOMBRAR LO QUE SENTIMOS Y CUIDAR EL DIÁLOGO INTERIOR'
+              : 'PROHIBIDO INVENTAR CITAS NI USAR METÁFORAS AJENAS'
         }):\n- Referencia: ${philosopherObj.autor} (${philosopherObj.obra})\n- Enseñanza / Máxima: "${philosopherObj.maxima}"\n${philosopherObj.historia ? `- Relato / Sentido humano: ${philosopherObj.historia}\n` : ''}${philosopherObj.ensenanza ? `- Enseñanza práctica: ${philosopherObj.ensenanza}\n` : ''}${philosopherObj.aplicacion_practica ? `- Aplicación práctica: ${philosopherObj.aplicacion_practica}\n` : ''}`
       : '';
 
@@ -382,8 +392,8 @@ ${contexto.resumenCorrientes}${taoBlock}${authorBlock}${strictIsolationRule}${we
 DEVUELVE SOLO JSON VÁLIDO CON ESTOS 5 CAMPOS:
 1. "gancho": ${
       isAuthorQuoteMode
-        ? isSabHumMode
-          ? `Encabezado breve humano en MAYÚSCULAS (4 a 8 palabras, ej. "${philosopherObj.gancho_sugerido || 'LO QUE PONES EN EL MUNDO VUELVE A TI'}") sin tono religioso`
+        ? isSabHumMode || isEmoMode
+          ? `Encabezado breve humano en MAYÚSCULAS (4 a 8 palabras, ej. "${philosopherObj.gancho_sugerido || 'NOMBRAR LO QUE SIENTES TE DA CALMA'}")`
           : `Encabezado en MAYÚSCULAS citando al autor y su obra (ej. "${philosopherObj.autor.toUpperCase()} · ${philosopherObj.obra.toUpperCase().slice(0, 28)}")`
         : isTaoMode
           ? `Encabezado en MAYÚSCULAS nombrando al maestro taoísta (${(liveTao?.autor || taoObj?.maestro || 'LAOZI').toUpperCase()}) y una frase breve de gancho para detener el scroll`
@@ -393,7 +403,9 @@ DEVUELVE SOLO JSON VÁLIDO CON ESTOS 5 CAMPOS:
       isAuthorQuoteMode
         ? isSabHumMode
           ? 'Enseñanza humana clara y cálida de 15 a 24 palabras en UNA o DOS oraciones COMPLETAS terminadas en punto final (sin lenguaje religioso ni dogmas; habla como ley de vida y empatía cotidiana)'
-          : `Cita fiel o síntesis exacta de la enseñanza real de ${philosopherObj.autor} en UNA o DOS oraciones COMPLETAS terminadas en punto final (14 a 25 palabras, máximo 180 caracteres, sin frases cortadas)`
+          : isEmoMode
+            ? `Enseñanza fiel y compasiva basada en ${philosopherObj.autor} sobre autoconocimiento o regulación emocional en UNA o DOS oraciones COMPLETAS terminadas en punto final (14 a 25 palabras, máximo 180 caracteres, sin positividad tóxica)`
+            : `Cita fiel o síntesis exacta de la enseñanza real de ${philosopherObj.autor} en UNA o DOS oraciones COMPLETAS terminadas en punto final (14 a 25 palabras, máximo 180 caracteres, sin frases cortadas)`
         : `Mensaje ORIGINAL de 15 a 24 palabras en UNA o DOS oraciones COMPLETAS terminadas en punto final (sin cortar ideas ni usar puntos suspensivos), anclado en la ${isTaoMode ? 'enseñanza real del maestro taoísta elegido, trayendo esperanza frente al ruido digital actual' : 'METÁFORA CENTRAL elegida'}. Evita frases gastadas ("noche más larga", "tormenta pasará", "luz interior")`
     }.
 3. "palabras_clave": 2 o 3 palabras EXACTAS de "frase" para resaltar en dorado.
@@ -402,7 +414,9 @@ DEVUELVE SOLO JSON VÁLIDO CON ESTOS 5 CAMPOS:
       isAuthorQuoteMode
         ? isSabHumMode
           ? `gancho con emoji 🕊️ + breve parábola o reflexión humana sin tono confesional ni dogmas + 1 gesto concreto para ser mejor persona hoy + pregunta cercana + MÁXIMO 5 hashtags de alto alcance en Instagram (usa como base: ${HASHTAG_PRESETS.sabiduria_humana})`
-          : `gancho con emoji ${isStoicMode ? '🏛️' : isKybalionMode ? '🔺' : '🦉'} + cita literal "${philosopherObj.maxima}" atribuida a ${philosopherObj.autor} (${philosopherObj.obra}) + 2 párrafos concretos para volver a la humanidad más humana hoy + pregunta para comentar + MÁXIMO 5 hashtags de mayor alcance y seguidores en Instagram (usa como base: ${isStoicMode ? HASHTAG_PRESETS.estoicismo : isKybalionMode ? HASHTAG_PRESETS.kybalion : HASHTAG_PRESETS.filosofia})`
+          : isEmoMode
+            ? `gancho con emoji 🧠 + cita o principio atribuido a ${philosopherObj.autor} (${philosopherObj.obra}) + explicación cercana para entender y regular la emoción hoy + 1 ejercicio práctico breve + invitación a guardar o enviar a alguien que lo necesite + MÁXIMO 5 hashtags de alto alcance en Instagram (usa como base: ${HASHTAG_PRESETS.inteligencia_emocional})`
+            : `gancho con emoji ${isStoicMode ? '🏛️' : isKybalionMode ? '🔺' : '🦉'} + cita literal "${philosopherObj.maxima}" atribuida a ${philosopherObj.autor} (${philosopherObj.obra}) + 2 párrafos concretos para volver a la humanidad más humana hoy + pregunta para comentar + MÁXIMO 5 hashtags de mayor alcance y seguidores en Instagram (usa como base: ${isStoicMode ? HASHTAG_PRESETS.estoicismo : isKybalionMode ? HASHTAG_PRESETS.kybalion : HASHTAG_PRESETS.filosofia})`
         : isTaoMode
           ? `gancho con emoji ☯️ + nombra al maestro (Laozi / Zhuangzi / Liezi / Wang Chongyang / Maestros Celestiales) + narra su historia corta o frase real + conecta esa calma con quienes hoy solo ven prisa en redes/TikTok + pregunta para comentar + MÁXIMO 5 hashtags de alto alcance en Instagram (usa como base: ${HASHTAG_PRESETS.taoismo})`
           : `gancho con emoji + 2 párrafos concretos conectando la metáfora con la sabiduría de hoy + pregunta para comentar + MÁXIMO 5 hashtags populares de alto alcance (ej. ${HASHTAG_PRESETS.esperanza_general})`
@@ -969,6 +983,22 @@ DEVUELVE SOLO JSON VÁLIDO:
         emoji: '🕊️',
         label: 'Sabiduría práctica',
         hashtags: HASHTAG_PRESETS.sabiduria_humana
+      });
+    }
+
+    const emoPool = Array.isArray(contexto.corrientesObj?.inteligenciaEmocionalPool)
+      ? contexto.corrientesObj.inteligenciaEmocionalPool
+      : contexto.corrientesObj?.inteligenciaEmocional
+        ? [contexto.corrientesObj.inteligenciaEmocional]
+        : [];
+    if (contexto.filtro === 'inteligencia_emocional' && (contexto.webPulse?.emoQuote || emoPool.length > 0)) {
+      return buildAuthorQuoteFallback({
+        liveQuote: contexto.webPulse?.emoQuote,
+        pool: emoPool,
+        defaultAtm: 'serenidad',
+        emoji: '🧠',
+        label: 'Inteligencia Emocional',
+        hashtags: HASHTAG_PRESETS.inteligencia_emocional
       });
     }
 

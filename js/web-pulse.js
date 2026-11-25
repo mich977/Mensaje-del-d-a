@@ -274,6 +274,7 @@ Resume en máximo 3 líneas en español un hecho concreto, real y edificante que
   const taoQuotesCache = { loaded: false, items: [] };
   const filosofiaQuotesCache = { loaded: false, items: [] };
   const kybalionQuotesCache = { loaded: false, items: [] };
+  const emocionalQuotesCache = { loaded: false, items: [] };
 
   function parseWikiquoteAuthorPage(pageTitle, wikitext, pageUrl, defaultWorks) {
     const cleanAuthor = String(pageTitle || '')
@@ -553,6 +554,45 @@ Resume en máximo 3 líneas en español un hecho concreto, real y edificante que
         summaryText: '',
         sources: [],
         headline: 'Usando códice de Maestros y Kybalion locales'
+      };
+    }
+
+    if (contexto?.filtro === 'inteligencia_emocional') {
+      const emoQuote = await Promise.race([
+        fetchWikiquoteLineageQuote({
+          titles: 'Viktor_Frankl|Daniel_Goleman|Carl_Rogers|Mario_Alonso_Puig',
+          defaultWorks: {
+            'Viktor Frankl': 'El hombre en busca de sentido (Wikiquote)',
+            'Daniel Goleman': 'Inteligencia Emocional (Wikiquote)',
+            'Carl Rogers': 'El proceso de convertirse en persona (Wikiquote)',
+            'Mario Alonso Puig': 'Gestión Emocional y Neurociencia (Wikiquote)'
+          },
+          cache: emocionalQuotesCache,
+          recentMessages: contexto.recentMessages
+        }),
+        new Promise((resolve) => setTimeout(() => resolve(null), 2500))
+      ]);
+      if (emoQuote) {
+        return {
+          connected: true,
+          emoQuote,
+          summaryText: `Inteligencia Emocional (${emoQuote.autor} · ${emoQuote.obra}): "${emoQuote.maxima}"`,
+          sources: [
+            {
+              origin: 'Wikiquote Psicología & Emociones',
+              title: `${emoQuote.autor} (${emoQuote.obra})`,
+              url: emoQuote.sourceUrl
+            }
+          ],
+          headline: `${emoQuote.autor}: ${emoQuote.obra}`
+        };
+      }
+      return {
+        connected: false,
+        emoQuote: null,
+        summaryText: '',
+        sources: [],
+        headline: 'Usando códice curado de Inteligencia Emocional'
       };
     }
 

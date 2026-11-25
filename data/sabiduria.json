@@ -384,7 +384,11 @@
         "ensenanza": "No juzgues demasiado pronto una pérdida de hoy: a veces lo que duele te está protegiendo para mañana.",
         "gancho_sugerido": "LIEZI · ¿QUIÉN SABE QUÉ ES SUERTE HOY?",
         "frase_corta": "Lo que hoy parece una pérdida muchas veces te cuida en silencio para el mañana; confía sin apurar el juicio.",
-        "palabras_clave": ["pérdida", "silencio", "confía"],
+        "palabras_clave": [
+          "pérdida",
+          "silencio",
+          "confía"
+        ],
         "atmosfera": "amanecer"
       },
       {
@@ -395,7 +399,11 @@
         "ensenanza": "Avanzar con calma adaptable te lleva más lejos que golpearte contra muros a la fuerza.",
         "gancho_sugerido": "LAOZI (LAO TSÉ) · EL SECRETO DEL AGUA",
         "frase_corta": "Nada hay más suave que el agua, pero nada la supera frente a lo duro; avanza con calma y abrirás camino.",
-        "palabras_clave": ["agua", "calma", "camino"],
+        "palabras_clave": [
+          "agua",
+          "calma",
+          "camino"
+        ],
         "atmosfera": "serenidad"
       },
       {
@@ -406,7 +414,11 @@
         "ensenanza": "Ceder un momento ante la tormenta no te hace débil: te mantiene en pie para ver el sol.",
         "gancho_sugerido": "LAOZI · DOBLARSE SIN QUEBRARSE",
         "frase_corta": "Lo rígido se quiebra bajo la tormenta; quien cultiva flexibilidad suelta el peso a tiempo y vuelve a erguirse.",
-        "palabras_clave": ["tormenta", "flexibilidad", "erguirse"],
+        "palabras_clave": [
+          "tormenta",
+          "flexibilidad",
+          "erguirse"
+        ],
         "atmosfera": "fortaleza"
       },
       {
@@ -417,7 +429,11 @@
         "ensenanza": "Si llenas cada minuto de pantallas, ruido y prisa, no dejas espacio para escuchar tu propia vida.",
         "gancho_sugerido": "LAOZI · EL VALOR DE HACER ESPACIO",
         "frase_corta": "La vasija sirve gracias al hueco que guarda dentro; apagar el ruido un momento abre lugar para lo real.",
-        "palabras_clave": ["ruido", "silencio", "real"],
+        "palabras_clave": [
+          "ruido",
+          "silencio",
+          "real"
+        ],
         "atmosfera": "serenidad"
       },
       {
@@ -428,7 +444,11 @@
         "ensenanza": "No te compares con vidas editadas ajenas: tu único trabajo real es dar hoy un paso honesto.",
         "gancho_sugerido": "LAOZI (LAO TSÉ) · UN PASO REAL HOY",
         "frase_corta": "Un viaje de mil millas comienza bajo tus propios pies; deja la prisa irreal y da hoy un paso honesto.",
-        "palabras_clave": ["paso", "prisa", "honesto"],
+        "palabras_clave": [
+          "paso",
+          "prisa",
+          "honesto"
+        ],
         "atmosfera": "amanecer"
       },
       {
@@ -439,7 +459,11 @@
         "ensenanza": "Casi nadie camina buscando herirte; suelta la pelea imaginaria y cuida tu propia calma.",
         "gancho_sugerido": "ZHUANGZI (CHUANG TZU) · LA BARCA VACÍA",
         "frase_corta": "Muchas tormentas ajenas son como una barca vacía en la niebla: no son contra ti, suelta el enojo y sigue.",
-        "palabras_clave": ["barca", "niebla", "enojo"],
+        "palabras_clave": [
+          "barca",
+          "niebla",
+          "enojo"
+        ],
         "atmosfera": "aurora"
       },
       {
@@ -450,7 +474,11 @@
         "ensenanza": "Cuando fluyes con el ritmo real de las cosas (Wu Wei), logras mucho más sin agotarte.",
         "gancho_sugerido": "ZHUANGZI · FLUIR SIN DESGASTARTE",
         "frase_corta": "Quien choca contra cada muro se agota; quien descubre el espacio natural avanza liviano y conserva su fuerza.",
-        "palabras_clave": ["espacio", "liviano", "fuerza"],
+        "palabras_clave": [
+          "espacio",
+          "liviano",
+          "fuerza"
+        ],
         "atmosfera": "fortaleza"
       },
       {
@@ -461,7 +489,11 @@
         "ensenanza": "No necesitas encajar en moldes virales para tener valor: tu diferencia puede ser tu refugio.",
         "gancho_sugerido": "ZHUANGZI · TU FORMA ÚNICA TIENE VALOR",
         "frase_corta": "Aquello que el mundo juzgó imperfecto en ti puede ser la raíz exacta que hoy te sostiene vivo y libre.",
-        "palabras_clave": ["raíz", "vivo", "libre"],
+        "palabras_clave": [
+          "raíz",
+          "vivo",
+          "libre"
+        ],
         "atmosfera": "renacimiento"
       },
       {
@@ -472,7 +504,11 @@
         "ensenanza": "No te reduzcas a tus preocupaciones pasajeras; tu conciencia es más amplia que este instante.",
         "gancho_sugerido": "ZHUANGZI · ERES MÁS QUE ESTE INSTANTE",
         "frase_corta": "No eres solo el peso que cargas hoy: cambia tu mirada con humildad y descubre la libertad que ya habita en ti.",
-        "palabras_clave": ["mirada", "libertad", "habita"],
+        "palabras_clave": [
+          "mirada",
+          "libertad",
+          "habita"
+        ],
         "atmosfera": "cosmos"
       },
       {
@@ -483,7 +519,11 @@
         "ensenanza": "Cuando limpias el miedo en tu mente, el mundo alrededor vuelve a mostrarse limpio y humano.",
         "gancho_sugerido": "LIE YUKOU (LIEZI) · LIMPIAR LA MIRADA",
         "frase_corta": "El miedo distorsiona lo que ves en los demás; cuando sueltas la sospecha, el mundo recupera su rostro humano.",
-        "palabras_clave": ["miedo", "mirada", "humano"],
+        "palabras_clave": [
+          "miedo",
+          "mirada",
+          "humano"
+        ],
         "atmosfera": "amanecer"
       },
       {
@@ -494,7 +534,11 @@
         "ensenanza": "La constancia humilde y sin vanidad mueve obstáculos que parecían eternos.",
         "gancho_sugerido": "LIE YUKOU (LIEZI) · FE CON CONSTANCIA",
         "frase_corta": "Quien busca plenitud afuera persigue espejismos; quien mira adentro halla fuerza tranquila para mover montañas.",
-        "palabras_clave": ["adentro", "fuerza", "montañas"],
+        "palabras_clave": [
+          "adentro",
+          "fuerza",
+          "montañas"
+        ],
         "atmosfera": "fortaleza"
       },
       {
@@ -505,7 +549,11 @@
         "ensenanza": "La claridad y la quietud interior valen más que mil estímulos rápidos de una pantalla.",
         "gancho_sugerido": "WANG CHONGYANG · CLARIDAD Y QUIETUD",
         "frase_corta": "Cuando el cuerpo se sosiega, la mente alcanza serenidad y nada externo vuelve a atarte; la claridad vive adentro.",
-        "palabras_clave": ["serenidad", "claridad", "adentro"],
+        "palabras_clave": [
+          "serenidad",
+          "claridad",
+          "adentro"
+        ],
         "atmosfera": "serenidad"
       },
       {
@@ -516,7 +564,11 @@
         "ensenanza": "La esperanza regresa cuando vuelves a disfrutar lo simple, real y compartido cara a cara.",
         "gancho_sugerido": "WANG CHONGYANG · EL ELIXIR DE LO SIMPLE",
         "frase_corta": "La naturaleza serena es el verdadero tesoro; vuelve a lo sencillo y descubrirás que nada te falta para vivir en paz.",
-        "palabras_clave": ["sencillo", "tesoro", "paz"],
+        "palabras_clave": [
+          "sencillo",
+          "tesoro",
+          "paz"
+        ],
         "atmosfera": "renacimiento"
       },
       {
@@ -527,7 +579,11 @@
         "ensenanza": "No necesitas aparentar poder en redes: la bondad cotidiana es tu fuerza indestructible.",
         "gancho_sugerido": "MAESTROS CELESTIALES · FUERZA DEL VALLE",
         "frase_corta": "Sé como el valle que acoge y como el agua que cede sin quebrarse; en tu bondad silenciosa habita fuerza real.",
-        "palabras_clave": ["bondad", "silenciosa", "real"],
+        "palabras_clave": [
+          "bondad",
+          "silenciosa",
+          "real"
+        ],
         "atmosfera": "aurora"
       },
       {
@@ -538,7 +594,11 @@
         "ensenanza": "Desconectarte de la comparación constante y agradecer lo que ya tienes devuelve la paz de golpe.",
         "gancho_sugerido": "MAESTROS CELESTIALES · PAZ DEL CORAZÓN",
         "frase_corta": "La verdadera riqueza no está en acumular miradas ni excesos, sino en saber agradecer lo esencial y cuidar la paz.",
-        "palabras_clave": ["riqueza", "agradecer", "paz"],
+        "palabras_clave": [
+          "riqueza",
+          "agradecer",
+          "paz"
+        ],
         "atmosfera": "cosmos"
       }
     ]
@@ -858,6 +918,156 @@
       }
     ]
   },
+  "inteligencia_emocional": {
+    "nombre": "Inteligencia Emocional y Autoconocimiento",
+    "descripcion": "Autoconciencia, autorregulación, agilidad emocional, autocompasión, comunicación no violenta y empatía práctica.",
+    "ensenanzas": [
+      {
+        "id": "emo_goleman_autoconciencia",
+        "autor": "Daniel Goleman",
+        "obra": "Inteligencia Emocional · Autoconciencia",
+        "pilar": "Autoconciencia",
+        "gancho_sugerido": "NOMBRAR LO QUE SIENTES ES EL PRIMER PASO",
+        "maxima": "El conocimiento de uno mismo, la capacidad de reconocer un sentimiento en el mismo momento en que aparece, constituye la piedra angular de la inteligencia emocional.",
+        "historia": "Antes de intentar cambiar una reacción impulsiva, observar en silencio qué emoción exacta acaba de encenderse te devuelve el timón de tus decisiones.",
+        "ensenanza": "Darte cuenta de lo que sientes mientras lo sientes evita que actúes en piloto automático.",
+        "aplicacion_practica": "Haz una pausa de diez segundos hoy y nombra en voz baja exactamente qué estás sintiendo.",
+        "atmosfera": "serenidad"
+      },
+      {
+        "id": "emo_goleman_autorregulacion",
+        "autor": "Daniel Goleman",
+        "obra": "Inteligencia Emocional · Autorregulación",
+        "pilar": "Autorregulación",
+        "gancho_sugerido": "NO ALIMENTES EL FUEGO DE LA IRA",
+        "maxima": "Los pensamientos obsesivos son la leña que alimenta el fuego de la ira, un fuego que solo podrá extinguirse contemplando las cosas desde un punto de vista diferente.",
+        "historia": "Cuando repetimos mentalmente una ofensa, el cuerpo vuelve a vivir la amenaza como si ocurriera otra vez; cambiar de perspectiva apaga la escalada.",
+        "ensenanza": "Regular la mente es cuestionar el relato repetitivo antes de convertirlo en discusión.",
+        "aplicacion_practica": "Si algo te molesta hoy, pregúntate qué parte es un hecho real y qué parte es suposición tuya.",
+        "atmosfera": "fortaleza"
+      },
+      {
+        "id": "emo_goleman_empatia",
+        "autor": "Daniel Goleman",
+        "obra": "Inteligencia Emocional · Empatía y Atención",
+        "pilar": "Empatía",
+        "gancho_sugerido": "ESCUCHAR DE VERDAD CREA PUENTES REALES",
+        "maxima": "El simple hecho de prestar atención establece una conexión emocional en cuya ausencia la empatía es imposible.",
+        "historia": "En medio de pantallas y prisa, mirar a alguien sin interrumpir ni preparar tu respuesta se volvió uno de los gestos más escasos y sanadores.",
+        "ensenanza": "La empatía empieza cuando regalas tu presencia completa antes de ofrecer soluciones.",
+        "aplicacion_practica": "En tu próxima conversación, suelta el teléfono y escucha sin interrumpir durante dos minutos.",
+        "atmosfera": "aurora"
+      },
+      {
+        "id": "emo_frankl_libertad",
+        "autor": "Viktor Frankl",
+        "obra": "El hombre en busca de sentido",
+        "pilar": "Pausa Consciente",
+        "gancho_sugerido": "TU ÚLTIMA LIBERTAD ESTÁ EN CÓMO RESPONDES",
+        "maxima": "Al ser humano se le puede arrebatar todo salvo una cosa: la última de las libertades humanas, elegir la actitud ante cualquier conjunto de circunstancias.",
+        "historia": "Incluso en las condiciones más extremas, Viktor Frankl descubrió que entre lo que nos ocurre y lo que hacemos siempre existe un margen interior de elección.",
+        "ensenanza": "No siempre eliges lo que pasa afuera, pero sí eliges desde qué dignidad y calma vas a responder.",
+        "aplicacion_practica": "Ante un imprevisto difícil hoy, respira antes de contestar y elige tu respuesta con conciencia.",
+        "atmosfera": "amanecer"
+      },
+      {
+        "id": "emo_rogers_aceptacion",
+        "autor": "Carl Rogers",
+        "obra": "El proceso de convertirse en persona",
+        "pilar": "Aceptación y Congruencia",
+        "gancho_sugerido": "ACEPTAR LO QUE SIENTES TE PERMITE AVANZAR",
+        "maxima": "Cuando acepto con honestidad mis propios sentimientos de miedo, desaliento, ira o afecto, recién entonces puedo transformarme y seguir adelante.",
+        "historia": "Luchar contra lo que sentimos o fingir que nada duele nos deja inmóviles; la aceptación honesta abre la puerta al cambio real.",
+        "ensenanza": "No necesitas ser perfecto para cuidarte: reconocer tu fragilidad te vuelve más auténtico y sereno.",
+        "aplicacion_practica": "Permítete sentir hoy sin juzgarte durante cinco minutos eso que venías evitando.",
+        "atmosfera": "renacimiento"
+      },
+      {
+        "id": "emo_brown_vulnerabilidad",
+        "autor": "Brené Brown",
+        "obra": "El poder de la vulnerabilidad",
+        "pilar": "Coraje Emocional",
+        "gancho_sugerido": "MOSTRARTE HUMANO NO ES DEBILIDAD",
+        "maxima": "La vulnerabilidad no es ganar o perder; es tener el valor de presentarse y mostrarse real cuando no puedes controlar el resultado.",
+        "historia": "Solemos confundir coraza con fortaleza, pero abrir conversaciones honestas y pedir ayuda requiere mucho más valor que esconderse.",
+        "ensenanza": "La verdadera fortaleza emocional nace de mostrarte sincero y presente aun con incertidumbre.",
+        "aplicacion_practica": "Comparte hoy con alguien de confianza cómo te sientes de verdad, sin disfrazar tu cansancio.",
+        "atmosfera": "aurora"
+      },
+      {
+        "id": "emo_brackett_ruler",
+        "autor": "Marc Brackett",
+        "obra": "Permiso para sentir (Modelo RULER)",
+        "pilar": "Alfabetización Emocional",
+        "gancho_sugerido": "LAS EMOCIONES SON DATOS PARA ESCUCHAR",
+        "maxima": "Las emociones no son buenas ni malas, son información; el objetivo no es reprimir lo que duele, sino aprender a entenderlo y regularlo con sabiduría.",
+        "historia": "El modelo RULER enseña a reconocer, comprender, etiquetar, expresar y regular lo que sentimos para dejar de pelear con nuestro mundo interno.",
+        "ensenanza": "Cuando entiendes qué mensaje trae tu emoción, deja de arrastrarte y empieza a orientarte.",
+        "aplicacion_practica": "Pregúntate hoy qué necesidad o límite te está señalando tu incomodidad actual.",
+        "atmosfera": "cosmos"
+      },
+      {
+        "id": "emo_david_agilidad",
+        "autor": "Susan David",
+        "obra": "Agilidad Emocional",
+        "pilar": "Agilidad Emocional",
+        "gancho_sugerido": "SENTIR ALGO DIFÍCIL NO ES UNA ORDEN",
+        "maxima": "Las emociones son datos valiosos, no directrices absolutas; sentir una emoción difícil no significa que debas dejar que te gobierne.",
+        "historia": "Frente a la positividad forzada, la agilidad emocional propone mirar el miedo o la tristeza con curiosidad, dar un paso atrás y elegir según tus valores.",
+        "ensenanza": "Tú no eres tu tormenta pasajera; eres la conciencia que la observa y decide el siguiente paso.",
+        "aplicacion_practica": "Cambia la frase «estoy ansioso» por «noto que estoy sintiendo ansiedad en este momento».",
+        "atmosfera": "serenidad"
+      },
+      {
+        "id": "emo_neff_autocompasion",
+        "autor": "Kristin Neff",
+        "obra": "Sé amable contigo mismo",
+        "pilar": "Autocompasión",
+        "gancho_sugerido": "HÁBLATE COMO LE HABLARÍAS A QUIEN AMAS",
+        "maxima": "La autocompasión consiste en tratarse a uno mismo con la misma amabilidad, gentileza y comprensión que ofreceríamos a un amigo querido en un día duro.",
+        "historia": "Muchas veces somos nuestro juez más cruel cuando tropezamos, olvidando que el dolor forma parte compartida de toda experiencia humana.",
+        "ensenanza": "Cuidar tu diálogo interior en los errores te levanta más rápido que la culpa constante.",
+        "aplicacion_practica": "Cuando te equivoques hoy, reemplaza el reproche por una frase amable que le dirías a un buen amigo.",
+        "atmosfera": "amanecer"
+      },
+      {
+        "id": "emo_rosenberg_cnv",
+        "autor": "Marshall Rosenberg",
+        "obra": "Comunicación No Violenta",
+        "pilar": "Habilidades Sociales",
+        "gancho_sugerido": "HABLA DESDE LO QUE SIENTES, NO DESDE EL ATAQUE",
+        "maxima": "Cuanto más conectemos con nuestros propios sentimientos y necesidades reales, más fácil será que los demás respondan con empatía y sin ponerse a la defensiva.",
+        "historia": "Detrás de muchos gritos o silencios fríos hay una necesidad humana no expresada buscando respeto, calma o escucha.",
+        "ensenanza": "Expresar lo que necesitas sin acusar al otro transforma discusiones en acuerdos honestos.",
+        "aplicacion_practica": "En lugar de acusar con un «tú siempre», expresa hoy con calma cómo te sentiste y qué necesitas.",
+        "atmosfera": "serenidad"
+      },
+      {
+        "id": "emo_linehan_aceptacion",
+        "autor": "Marsha Linehan",
+        "obra": "Terapia Dialéctico-Conductual · Mente Sabia",
+        "pilar": "Aceptación Radical",
+        "gancho_sugerido": "ACEPTAR NO ES RENDIRSE, ES DEJAR DE PELEAR",
+        "maxima": "La vida puede valer la pena ser vivida incluso cuando hay dolor; el sufrimiento crece cuando resistimos la realidad y se alivia al aceptarla para actuar.",
+        "historia": "La mente sabia une la razón práctica con la sensibilidad emocional para sostener el presente tal como es antes de construir el siguiente paso.",
+        "ensenanza": "Dejar de pelear contra lo que ya ocurrió libera la energía que necesitas para cuidar tu presente.",
+        "aplicacion_practica": "Suelta hoy la pregunta «¿por qué pasó esto?» y pregúntate «¿qué paso pequeño puedo dar ahora?».",
+        "atmosfera": "renacimiento"
+      },
+      {
+        "id": "emo_puig_pausa",
+        "autor": "Mario Alonso Puig",
+        "obra": "Neurociencia y Gestión Emocional",
+        "pilar": "Pausa y Claridad",
+        "gancho_sugerido": "UN MINUTO DE PAUSA CAMBIA TODO TU DÍA",
+        "maxima": "Crear espacios de pausa en nuestra vida cotidiana devuelve al cerebro la claridad, la escucha y la perspectiva que el estrés constante le roba.",
+        "historia": "Cuando vivimos acelerados, la mente interpreta cada problema como una amenaza urgente; desacelerar activa de nuevo la lucidez y la empatía.",
+        "ensenanza": "Frenar unos minutos al día no es perder el tiempo: es recuperar tu serenidad y criterio.",
+        "aplicacion_practica": "Regálate hoy tres respiraciones lentas mirando por una ventana antes de cambiar de tarea.",
+        "atmosfera": "cosmos"
+      }
+    ]
+  },
   "numerologia": {
     "nombre": "Numerología Pitagórica y Vibracional",
     "descripcion": "Arquetipos numéricos del 1 al 9 y números maestros 11, 22 y 33 que revelan la frecuencia simbólica del día.",
@@ -997,32 +1207,164 @@
       }
     ],
     "zodiaco_occidental": [
-      { "nombre": "Aries", "elemento": "Fuego", "planeta": "Marte", "arquetipo": "El Pionero", "sabiduria": "El valor no es ausencia de duda, sino avanzar pese a ella." },
-      { "nombre": "Tauro", "elemento": "Tierra", "planeta": "Venus", "arquetipo": "El Guardián de la Forma", "sabiduria": "La verdadera riqueza es la calma que nadie puede arrebatarte." },
-      { "nombre": "Géminis", "elemento": "Aire", "planeta": "Mercurio", "arquetipo": "El Mensajero", "sabiduria": "Quien hace mejores preguntas habita un universo más amplio." },
-      { "nombre": "Cáncer", "elemento": "Agua", "planeta": "Luna", "arquetipo": "El Protector del Refugio", "sabiduria": "La sensibilidad bien enraizada es una armadura invisible." },
-      { "nombre": "Leo", "elemento": "Fuego", "planeta": "Sol", "arquetipo": "El Corazón Soberano", "sabiduria": "Brillar con autenticidad da permiso a otros para encender su propia luz." },
-      { "nombre": "Virgo", "elemento": "Tierra", "planeta": "Mercurio", "arquetipo": "El Alquimista del Detalle", "sabiduria": "La excelencia es un acto silencioso de respeto por lo que haces." },
-      { "nombre": "Libra", "elemento": "Aire", "planeta": "Venus", "arquetipo": "El Equilibrador", "sabiduria": "La paz real nace cuando el criterio interno pesa más que el ruido ajeno." },
-      { "nombre": "Escorpio", "elemento": "Agua", "planeta": "Plutón", "arquetipo": "El Fénix Transmutador", "sabiduria": "Todo final profundo es la incubadora de una fuerza irreconocible." },
-      { "nombre": "Sagitario", "elemento": "Fuego", "planeta": "Júpiter", "arquetipo": "El Filósofo Errante", "sabiduria": "El horizonte siempre recompensa a quien se atreve a cruzar su certeza." },
-      { "nombre": "Capricornio", "elemento": "Tierra", "planeta": "Saturno", "arquetipo": "El Escalador del Tiempo", "sabiduria": "La disciplina transforma el tiempo de enemigo en aliado invencible." },
-      { "nombre": "Acuario", "elemento": "Aire", "planeta": "Urano", "arquetipo": "El Visionario Ciber-Humanista", "sabiduria": "El futuro pertenece a quienes piensan más allá de la tribu sin olvidar lo humano." },
-      { "nombre": "Piscis", "elemento": "Agua", "planeta": "Neptuno", "arquetipo": "El Místico Oceánico", "sabiduria": "En el silencio de la empatía todo límite ilusorio se disuelve." }
+      {
+        "nombre": "Aries",
+        "elemento": "Fuego",
+        "planeta": "Marte",
+        "arquetipo": "El Pionero",
+        "sabiduria": "El valor no es ausencia de duda, sino avanzar pese a ella."
+      },
+      {
+        "nombre": "Tauro",
+        "elemento": "Tierra",
+        "planeta": "Venus",
+        "arquetipo": "El Guardián de la Forma",
+        "sabiduria": "La verdadera riqueza es la calma que nadie puede arrebatarte."
+      },
+      {
+        "nombre": "Géminis",
+        "elemento": "Aire",
+        "planeta": "Mercurio",
+        "arquetipo": "El Mensajero",
+        "sabiduria": "Quien hace mejores preguntas habita un universo más amplio."
+      },
+      {
+        "nombre": "Cáncer",
+        "elemento": "Agua",
+        "planeta": "Luna",
+        "arquetipo": "El Protector del Refugio",
+        "sabiduria": "La sensibilidad bien enraizada es una armadura invisible."
+      },
+      {
+        "nombre": "Leo",
+        "elemento": "Fuego",
+        "planeta": "Sol",
+        "arquetipo": "El Corazón Soberano",
+        "sabiduria": "Brillar con autenticidad da permiso a otros para encender su propia luz."
+      },
+      {
+        "nombre": "Virgo",
+        "elemento": "Tierra",
+        "planeta": "Mercurio",
+        "arquetipo": "El Alquimista del Detalle",
+        "sabiduria": "La excelencia es un acto silencioso de respeto por lo que haces."
+      },
+      {
+        "nombre": "Libra",
+        "elemento": "Aire",
+        "planeta": "Venus",
+        "arquetipo": "El Equilibrador",
+        "sabiduria": "La paz real nace cuando el criterio interno pesa más que el ruido ajeno."
+      },
+      {
+        "nombre": "Escorpio",
+        "elemento": "Agua",
+        "planeta": "Plutón",
+        "arquetipo": "El Fénix Transmutador",
+        "sabiduria": "Todo final profundo es la incubadora de una fuerza irreconocible."
+      },
+      {
+        "nombre": "Sagitario",
+        "elemento": "Fuego",
+        "planeta": "Júpiter",
+        "arquetipo": "El Filósofo Errante",
+        "sabiduria": "El horizonte siempre recompensa a quien se atreve a cruzar su certeza."
+      },
+      {
+        "nombre": "Capricornio",
+        "elemento": "Tierra",
+        "planeta": "Saturno",
+        "arquetipo": "El Escalador del Tiempo",
+        "sabiduria": "La disciplina transforma el tiempo de enemigo en aliado invencible."
+      },
+      {
+        "nombre": "Acuario",
+        "elemento": "Aire",
+        "planeta": "Urano",
+        "arquetipo": "El Visionario Ciber-Humanista",
+        "sabiduria": "El futuro pertenece a quienes piensan más allá de la tribu sin olvidar lo humano."
+      },
+      {
+        "nombre": "Piscis",
+        "elemento": "Agua",
+        "planeta": "Neptuno",
+        "arquetipo": "El Místico Oceánico",
+        "sabiduria": "En el silencio de la empatía todo límite ilusorio se disuelve."
+      }
     ],
     "zodiaco_chino": [
-      { "nombre": "Rata", "elemento_fijo": "Agua", "arquetipo": "El Estratega Ágil", "virtud": "Ingenio para hallar salidas donde otros ven muros." },
-      { "nombre": "Buey", "elemento_fijo": "Tierra", "arquetipo": "La Fuerza Silenciosa", "virtud": "Constancia inquebrantable paso a paso." },
-      { "nombre": "Tigre", "elemento_fijo": "Madera", "arquetipo": "El Espíritu Indómito", "virtud": "Coraje magnético para proteger y abrir camino." },
-      { "nombre": "Conejo", "elemento_fijo": "Madera", "arquetipo": "El Diplomático Lúcido", "virtud": "Serenidad estratégica que vence sin estridencia." },
-      { "nombre": "Dragón", "elemento_fijo": "Tierra", "arquetipo": "El Emblema Celeste", "virtud": "Visión audaz unida a magnanimidad." },
-      { "nombre": "Serpiente", "elemento_fijo": "Fuego", "arquetipo": "La Sabiduría Oculta", "virtud": "Intuición fría, renovación y lectura profunda." },
-      { "nombre": "Caballo", "elemento_fijo": "Fuego", "arquetipo": "El Impulso Libre", "virtud": "Energía vital que no teme la distancia." },
-      { "nombre": "Cabra", "elemento_fijo": "Tierra", "arquetipo": "El Artesano Armónico", "virtud": "Sensibilidad creativa que suaviza tiempos duros." },
-      { "nombre": "Mono", "elemento_fijo": "Metal", "arquetipo": "El Alquimista Ingenioso", "virtud": "Agilidad mental para convertir crisis en juego maestro." },
-      { "nombre": "Gallo", "elemento_fijo": "Metal", "arquetipo": "El Vigía del Alba", "virtud": "Precisión, franqueza y disciplina puntual." },
-      { "nombre": "Perro", "elemento_fijo": "Tierra", "arquetipo": "El Centinela Leal", "virtud": "Integridad moral en los momentos de prueba." },
-      { "nombre": "Cerdo", "elemento_fijo": "Agua", "arquetipo": "La Abundancia Noble", "virtud": "Generosidad genuina y disfrute consciente." }
+      {
+        "nombre": "Rata",
+        "elemento_fijo": "Agua",
+        "arquetipo": "El Estratega Ágil",
+        "virtud": "Ingenio para hallar salidas donde otros ven muros."
+      },
+      {
+        "nombre": "Buey",
+        "elemento_fijo": "Tierra",
+        "arquetipo": "La Fuerza Silenciosa",
+        "virtud": "Constancia inquebrantable paso a paso."
+      },
+      {
+        "nombre": "Tigre",
+        "elemento_fijo": "Madera",
+        "arquetipo": "El Espíritu Indómito",
+        "virtud": "Coraje magnético para proteger y abrir camino."
+      },
+      {
+        "nombre": "Conejo",
+        "elemento_fijo": "Madera",
+        "arquetipo": "El Diplomático Lúcido",
+        "virtud": "Serenidad estratégica que vence sin estridencia."
+      },
+      {
+        "nombre": "Dragón",
+        "elemento_fijo": "Tierra",
+        "arquetipo": "El Emblema Celeste",
+        "virtud": "Visión audaz unida a magnanimidad."
+      },
+      {
+        "nombre": "Serpiente",
+        "elemento_fijo": "Fuego",
+        "arquetipo": "La Sabiduría Oculta",
+        "virtud": "Intuición fría, renovación y lectura profunda."
+      },
+      {
+        "nombre": "Caballo",
+        "elemento_fijo": "Fuego",
+        "arquetipo": "El Impulso Libre",
+        "virtud": "Energía vital que no teme la distancia."
+      },
+      {
+        "nombre": "Cabra",
+        "elemento_fijo": "Tierra",
+        "arquetipo": "El Artesano Armónico",
+        "virtud": "Sensibilidad creativa que suaviza tiempos duros."
+      },
+      {
+        "nombre": "Mono",
+        "elemento_fijo": "Metal",
+        "arquetipo": "El Alquimista Ingenioso",
+        "virtud": "Agilidad mental para convertir crisis en juego maestro."
+      },
+      {
+        "nombre": "Gallo",
+        "elemento_fijo": "Metal",
+        "arquetipo": "El Vigía del Alba",
+        "virtud": "Precisión, franqueza y disciplina puntual."
+      },
+      {
+        "nombre": "Perro",
+        "elemento_fijo": "Tierra",
+        "arquetipo": "El Centinela Leal",
+        "virtud": "Integridad moral en los momentos de prueba."
+      },
+      {
+        "nombre": "Cerdo",
+        "elemento_fijo": "Agua",
+        "arquetipo": "La Abundancia Noble",
+        "virtud": "Generosidad genuina y disfrute consciente."
+      }
     ],
     "lecciones_historicas": [
       {
