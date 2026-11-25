@@ -73,7 +73,7 @@
             </h1>
             <span id="app-version-badge"
               class="shrink-0 rounded-md border border-slate-300 bg-white/90 px-1.5 py-0.5 text-[10px] font-mono font-semibold text-slate-500 shadow-sm">
-              v1.0.42
+              v1.0.43
             </span>
           </div>
           <p id="daily-numerology-pill" class="truncate text-[11px] font-mono text-slate-600">
@@ -236,6 +236,26 @@
           style="aspect-ratio: 4 / 5;">
           <canvas id="oracle-canvas" class="h-full w-full block object-contain"></canvas>
 
+          <!-- Estado Inicial en Espera (antes de invocar) -->
+          <div id="canvas-standby"
+            class="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3.5 bg-gradient-to-br from-slate-800 via-slate-900 to-sky-950 px-6 text-center text-white">
+            <div class="flex h-16 w-16 items-center justify-center rounded-2xl border border-sky-400/40 bg-white/10 text-3xl shadow-lg backdrop-blur-sm">
+              <span id="standby-icon">✨</span>
+            </div>
+            <div class="space-y-1.5 max-w-xs">
+              <p class="text-base sm:text-lg font-bold tracking-tight text-white">
+                Oráculo listo para invocar
+              </p>
+              <p id="standby-summary"
+                class="inline-block rounded-full border border-sky-400/40 bg-sky-500/15 px-3 py-1 text-[11px] font-mono font-semibold text-sky-200">
+                Apoyo &amp; Conciencia · Filosofía Universal · 4:5
+              </p>
+              <p class="text-xs leading-relaxed text-slate-300 pt-1">
+                Primero elige el <strong class="text-white">tipo de publicación</strong>, la <strong class="text-white">corriente filosófica</strong> y el formato; luego presiona <strong class="text-amber-300">INVOCAR MENSAJE</strong>.
+              </p>
+            </div>
+          </div>
+
           <!-- Overlay de Carga -->
           <div id="canvas-loading"
             class="hidden absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 bg-slate-800/80 backdrop-blur-md px-6 text-center">
@@ -300,7 +320,7 @@
             <h2 class="text-base font-bold text-slate-900">Configuración del Oráculo</h2>
             <span id="settings-version-badge"
               class="rounded-md border border-slate-300 bg-white px-1.5 py-0.5 text-[10px] font-mono font-semibold text-slate-500">
-              v1.0.42
+              v1.0.43
             </span>
           </div>
           <p class="text-xs text-slate-500">Tus credenciales se guardan solo en tu navegador.</p>

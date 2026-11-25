@@ -19,7 +19,7 @@
 
   const { renderOracleCanvas, FORMAT_DIMENSIONS, ATMOSPHERE_PALETTES } = global.OraculoCanvas;
 
-  const APP_VERSION = 'v1.0.42';
+  const APP_VERSION = 'v1.0.43';
   const DEFAULT_FIRMA = 'By מיכאל_NB - γ';
   const LEGACY_DEFAULT_FIRMAS = new Set(['By Michael_NB-γ', 'Seed&soul_MNB - γ']);
   const STORAGE_SETTINGS_KEY = 'oraculo_cf_settings';
@@ -57,6 +57,9 @@
   function cacheDom() {
     dom.canvas = document.getElementById('oracle-canvas');
     dom.canvasWrapper = document.getElementById('canvas-preview-wrapper');
+    dom.canvasStandby = document.getElementById('canvas-standby');
+    dom.standbyIcon = document.getElementById('standby-icon');
+    dom.standbySummary = document.getElementById('standby-summary');
     dom.canvasLoading = document.getElementById('canvas-loading');
     dom.loadingLabel = document.getElementById('loading-label');
     dom.btnInvoke = document.getElementById('btn-invoke');
@@ -476,7 +479,11 @@
   }
 
   async function refreshCanvasAndCaption() {
-    if (!state.currentOracle) return;
+    if (!state.currentOracle) {
+      renderStandbyState();
+      return;
+    }
+    if (dom.canvasStandby) dom.canvasStandby.classList.add('hidden');
     const o = state.currentOracle;
     const atmKey = o.atmosfera || global.OraculoGemini.inferAtmosphereFromText(`${o.gancho} ${o.frase}`);
     const atmLabel = ATMOSPHERE_PALETTES[atmKey]?.label || '🌅 Amanecer de Esperanza';
@@ -500,66 +507,59 @@
     dom.artBadge.textContent = `${atmLabel} · ${sourceTag}`;
   }
 
+  function renderStandbyState() {
+    const activeFiltro = FILTROS[state.settings.filtro] ? state.settings.filtro : 'filosofia';
+    const isEphemerisMode = state.settings.modo === 'efemeride';
+    const focusMap = {
+      mixto: 'Mezcla (Días Mundiales + Historia)',
+      mundiales: 'Días Internacionales / Conciencia',
+      historia: 'Hitos Históricos, Ciencia & Cultura',
+      chile: 'Efemérides de Chile'
+    };
+
+    if (dom.standbyIcon) {
+      dom.standbyIcon.textContent = isEphemerisMode ? '📅' : '✨';
+    }
+    if (dom.standbySummary) {
+      const modeLabel = isEphemerisMode ? 'Efeméride Mundial' : 'Apoyo & Conciencia';
+      const detailLabel = isEphemerisMode
+        ? focusMap[state.settings.efemerideEnfoque] || focusMap.mixto
+        : FILTROS[activeFiltro];
+      dom.standbySummary.textContent = `${modeLabel} · ${detailLabel} · ${state.settings.formato}`;
+    }
+    if (dom.canvasStandby) {
+      dom.canvasStandby.classList.remove('hidden');
+    }
+    if (dom.canvas) {
+      const ctx = dom.canvas.getContext('2d');
+      ctx?.clearRect(0, 0, dom.canvas.width, dom.canvas.height);
+    }
+
+    dom.captionBox.value = '';
+    dom.btnDownload.disabled = true;
+    if (dom.btnShareIg) dom.btnShareIg.disabled = true;
+    dom.btnCopyCaption.disabled = true;
+    if (dom.btnShuffleNature) dom.btnShuffleNature.disabled = true;
+    dom.artBadge.textContent = 'En espera de invocación';
+  }
+
   async function renderInitialShowcase() {
     const activeFiltro = FILTROS[state.settings.filtro] ? state.settings.filtro : 'filosofia';
     const contexto = buildOracleContext(activeFiltro);
     const num = contexto.numerologiaDia;
     dom.numerologyPill.textContent = `Vibración del Día: ${num.numero} · ${num.titulo.split('·')[0].trim()}`;
 
-    const isEphemerisMode = state.settings.modo === 'efemeride';
-    const matchingHistory = state.history.find((h) =>
-      isEphemerisMode
-        ? h.modo === 'efemeride'
-        : h.modo !== 'efemeride' && h.filtro === activeFiltro
-    );
-
-    if (matchingHistory) {
-      state.currentOracle = { ...matchingHistory };
-      await refreshCanvasAndCaption();
-      return;
-    }
-
-    if (isEphemerisMode || activeFiltro !== 'filosofia') {
-      await invokeOracle({ forceLocal: !hasApiKey() });
-      return;
-    }
-
-    state.currentOracle = {
-      id: 'welcome',
-      modo: 'esperanza',
-      timestamp: Date.now(),
-      gancho: 'CUANDO SIENTAS QUE LA TORMENTA NO TERMINA',
-      frase:
-        'Incluso la noche más larga obedece al ritmo del universo y prepara en silencio la claridad de tu próximo amanecer.',
-      palabras_clave: ['ritmo', 'claridad', 'amanecer'],
-      atmosfera: 'amanecer',
-      caption:
-        '🌅 CUANDO SIENTAS QUE LA TORMENTA NO TERMINA\n\nIncluso la noche más larga obedece al ritmo del universo y prepara en silencio la claridad de tu próximo amanecer.\n\nPresiona "✨ INVOCAR MENSAJE" para recibir una nueva palabra de esperanza y sabiduría con un fondo de naturaleza aleatorio.\n\n#Esperanza #OraculoCiberFilosofico #Filosofia #Estoicismo #Taoismo',
-      filtro: 'filosofia',
-      filtroLabel: 'Filosofía Universal',
-      numeroDia: num.numero,
-      imageDataUrl: null,
-      artSource: 'procedural'
-    };
-
-    await refreshCanvasAndCaption();
-
-    // Cargar en segundo plano un paisaje real aleatorio para la bienvenida
-    if (global.OraculoNature) {
-      global.OraculoNature.fetchRandomNaturePhoto('amanecer').then(async (natureArt) => {
-        if (natureArt?.imageDataUrl && state.currentOracle?.id === 'welcome') {
-          state.currentOracle.imageDataUrl = natureArt.imageDataUrl;
-          state.currentOracle.artSource = natureArt.source;
-          await refreshCanvasAndCaption();
-        }
-      });
-    }
+    state.currentOracle = null;
+    renderStandbyState();
   }
 
   function setLoading(loading, text = 'Consultando al Oráculo...') {
     state.isGenerating = loading;
     dom.btnInvoke.disabled = loading;
     dom.canvasLoading.classList.toggle('hidden', !loading);
+    if (dom.canvasStandby) {
+      dom.canvasStandby.classList.toggle('hidden', loading || Boolean(state.currentOracle));
+    }
     dom.loadingLabel.textContent = text;
   }
 
@@ -1245,8 +1245,8 @@
         state.settings.modo = 'esperanza';
         saveSettings();
         syncUIControls();
-        if (state.currentOracle?.modo === 'efemeride' && !state.isGenerating) {
-          renderInitialShowcase();
+        if (!state.currentOracle && !state.isGenerating) {
+          renderStandbyState();
         }
       });
     }
@@ -1256,8 +1256,8 @@
         state.settings.modo = 'efemeride';
         saveSettings();
         syncUIControls();
-        if (state.currentOracle?.modo !== 'efemeride' && !state.isGenerating) {
-          invokeOracle({ forceLocal: false });
+        if (!state.currentOracle && !state.isGenerating) {
+          renderStandbyState();
         }
       });
     }
@@ -1266,8 +1266,8 @@
       dom.ephemerisFocusSelect.addEventListener('change', () => {
         state.settings.efemerideEnfoque = dom.ephemerisFocusSelect.value;
         saveSettings();
-        if (state.settings.modo === 'efemeride' && !state.isGenerating) {
-          invokeOracle({ forceLocal: false });
+        if (!state.currentOracle && !state.isGenerating) {
+          renderStandbyState();
         }
       });
     }
@@ -1275,8 +1275,8 @@
     dom.streamSelect.addEventListener('change', () => {
       state.settings.filtro = dom.streamSelect.value;
       saveSettings();
-      if (state.settings.modo !== 'efemeride' && !state.isGenerating) {
-        invokeOracle({ forceLocal: !hasApiKey() });
+      if (!state.currentOracle && !state.isGenerating) {
+        renderStandbyState();
       }
     });
 
