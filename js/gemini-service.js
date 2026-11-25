@@ -18,7 +18,14 @@
 
   let memoryApiKey = '';
   let imageDisabledForKey = '';
-  let discoveredCache = { apiKey: '', ready: false, textModel: TEXT_MODEL, predictImageModels: [], contentImageModels: [] };
+  let discoveredCache = {
+    apiKey: '',
+    ready: false,
+    textModel: TEXT_MODEL,
+    textModels: [],
+    predictImageModels: [],
+    contentImageModels: []
+  };
 
   async function fetchWithTimeout(url, options = {}, timeoutMs = 15000) {
     const controller = new AbortController();
@@ -110,14 +117,16 @@
       )
       .map((m) => m.name.replace(/^models\//, ''));
 
-    // Priorizar gemini-3.8-flash, luego versiones 3.x flash, luego cualquier flash
+    // Priorizar gemini-3.x flash, luego 2.5-flash estable, luego otros flash rápidos
     const preferredOrder = (name) => {
       if (name === 'gemini-3.8-flash') return 0;
       if (/^gemini-3\.\d+-flash$/.test(name)) return 1;
       if (/^gemini-3.*flash/.test(name)) return 2;
       if (/^gemini-2\.5-flash$/.test(name)) return 3;
-      if (/flash/i.test(name)) return 4;
-      return 5;
+      if (/^gemini-2\.5-flash-lite$/.test(name)) return 4;
+      if (/^gemini-2\.0-flash$/.test(name)) return 5;
+      if (/flash/i.test(name)) return 6;
+      return 7;
     };
     textCandidates.sort((a, b) => preferredOrder(a) - preferredOrder(b));
 
@@ -143,6 +152,7 @@
       apiKey,
       ready: true,
       textModel: textCandidates[0] || TEXT_MODEL,
+      textModels: textCandidates,
       predictImageModels,
       contentImageModels
     };
@@ -446,7 +456,7 @@ DEVUELVE SOLO JSON VÁLIDO CON ESTOS 5 CAMPOS:
       };
     };
 
-    const callModel = async (modelName, includeThinking = true) => {
+    const callModel = async (modelName, includeThinking = true, timeoutMs = 22000) => {
       const endpoint = `${GEMINI_BASE_URL}/${modelName}:generateContent?key=${encodeURIComponent(apiKey)}`;
       const res = await fetchWithTimeout(
         endpoint,
@@ -455,7 +465,7 @@ DEVUELVE SOLO JSON VÁLIDO CON ESTOS 5 CAMPOS:
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(buildBodyForModel(modelName, includeThinking))
         },
-        28000
+        timeoutMs
       );
 
       // Si el modelo concreto rechaza thinkingConfig con 400, reintentar sin él de inmediato
@@ -463,55 +473,114 @@ DEVUELVE SOLO JSON VÁLIDO CON ESTOS 5 CAMPOS:
         const cloneData = await res.clone().json().catch(() => ({}));
         const msg400 = cloneData?.error?.message || '';
         if (/thinking/i.test(msg400)) {
-          return callModel(modelName, false);
+          return callModel(modelName, false, timeoutMs);
         }
       }
       return res;
     };
 
-    let modelToUse = getActiveTextModel();
-    let response = await callModel(modelToUse);
+    const isQuotaMessage = (status, msg) =>
+      status === 429 || /quota|RESOURCE_EXHAUSTED|rate.?limit|billing|credit|exceeded/i.test(msg);
 
-    // Si el modelo fue retirado o no está disponible para nuevos usuarios, autodescubrir el modelo activo
-    if (!response.ok) {
-      const errData = await response.json().catch(() => ({}));
-      const rawMsg = errData?.error?.message || `Error HTTP ${response.status} al consultar Gemini`;
-      const isQuotaErr =
-        response.status === 429 ||
-        /quota|RESOURCE_EXHAUSTED|rate.?limit|billing|credit|exceeded/i.test(rawMsg);
-      if (isQuotaErr) {
-        const qErr = new Error(`QUOTA_EXCEEDED: ${rawMsg}`);
+    const isHighDemandMessage = (status, msg) =>
+      [500, 502, 503, 504].includes(status) ||
+      /high demand|overloaded|unavailable|spikes in demand|temporarily|try again later|capacity/i.test(msg);
+
+    const isNotFoundMessage = (status, msg) =>
+      status === 404 || /no longer available|not found|deprecated/i.test(msg);
+
+    // Asegurar lista de modelos disponibles para poder rotar automáticamente ante 503 (alta demanda) o 404
+    const buildModelQueue = () => {
+      const defaults = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.0-flash'];
+      const discovered =
+        discoveredCache.apiKey === apiKey && discoveredCache.ready && Array.isArray(discoveredCache.textModels)
+          ? discoveredCache.textModels
+          : [];
+      const merged = [getActiveTextModel(), ...discovered, ...defaults].filter(Boolean);
+      return [...new Set(merged)].slice(0, 4);
+    };
+
+    let triedDiscovery = discoveredCache.apiKey === apiKey && discoveredCache.ready;
+    let queue = buildModelQueue();
+    let response = null;
+    let lastError = null;
+    let sawHighDemand = false;
+    let sawQuotaOnly = true;
+
+    for (let i = 0; i < queue.length; i++) {
+      const candidateModel = queue[i];
+      try {
+        const res = await callModel(candidateModel, true, i === 0 ? 22000 : 18000);
+        if (res.ok) {
+          response = res;
+          // Recordar temporalmente el modelo estable si el primero falló por 503/404
+          if (i > 0 && discoveredCache.apiKey === apiKey) {
+            discoveredCache.textModel = candidateModel;
+          }
+          break;
+        }
+
+        const errData = await res.json().catch(() => ({}));
+        const rawMsg = errData?.error?.message || `Error HTTP ${res.status} al consultar Gemini`;
+        const quotaErr = isQuotaMessage(res.status, rawMsg);
+        const demandErr = isHighDemandMessage(res.status, rawMsg);
+        const missingErr = isNotFoundMessage(res.status, rawMsg);
+
+        if (!quotaErr) sawQuotaOnly = false;
+        if (demandErr) sawHighDemand = true;
+
+        lastError = new Error(rawMsg);
+        lastError.status = res.status;
+        if (quotaErr) lastError.code = 'QUOTA_EXCEEDED';
+        else if (demandErr) lastError.code = 'HIGH_DEMAND';
+
+        // Si aún no descubrimos modelos de esta API Key y falló por 404/503, descubrir ahora
+        if (!triedDiscovery && (missingErr || demandErr)) {
+          triedDiscovery = true;
+          try {
+            const info = await discoverAvailableModels(apiKey);
+            if (Array.isArray(info?.textModels) && info.textModels.length) {
+              const extra = info.textModels.filter((m) => !queue.includes(m));
+              queue = [...queue, ...extra].slice(0, 5);
+            }
+          } catch {
+            // Continuar con los respaldos predeterminados
+          }
+        }
+
+        if ((demandErr || missingErr || quotaErr) && i < queue.length - 1) {
+          if (demandErr) {
+            await new Promise((r) => setTimeout(r, 300));
+          }
+          continue;
+        }
+        break;
+      } catch (err) {
+        sawQuotaOnly = false;
+        lastError = err;
+        if (i < queue.length - 1 && (err?.code === 'TIMEOUT' || /failed to fetch/i.test(String(err?.message || '')))) {
+          continue;
+        }
+        break;
+      }
+    }
+
+    if (!response) {
+      if (lastError?.code === 'QUOTA_EXCEEDED' || (sawQuotaOnly && lastError)) {
+        const qErr = new Error(`QUOTA_EXCEEDED: ${lastError?.message || 'Cuota agotada'}`);
         qErr.code = 'QUOTA_EXCEEDED';
-        qErr.status = response.status;
+        qErr.status = 429;
         throw qErr;
       }
-      if (response.status === 404 || /no longer available|not found|deprecated/i.test(rawMsg)) {
-        try {
-          discoveredCache.ready = false;
-          const info = await discoverAvailableModels(apiKey);
-          if (info?.textModel && info.textModel !== modelToUse) {
-            modelToUse = info.textModel;
-            response = await callModel(modelToUse);
-            if (!response.ok) {
-              const retryErr = await response.json().catch(() => ({}));
-              const retryMsg = retryErr?.error?.message || `Error HTTP ${response.status} en ${modelToUse}`;
-              const retryIsQuota =
-                response.status === 429 ||
-                /quota|RESOURCE_EXHAUSTED|rate.?limit|billing|credit|exceeded/i.test(retryMsg);
-              const e = new Error(retryIsQuota ? `QUOTA_EXCEEDED: ${retryMsg}` : retryMsg);
-              if (retryIsQuota) e.code = 'QUOTA_EXCEEDED';
-              throw e;
-            }
-          } else {
-            throw new Error(rawMsg);
-          }
-        } catch (discoveryErr) {
-          if (discoveryErr.code === 'QUOTA_EXCEEDED') throw discoveryErr;
-          throw new Error(discoveryErr.message || rawMsg);
-        }
-      } else {
-        throw new Error(rawMsg);
+      if (sawHighDemand || lastError?.code === 'HIGH_DEMAND') {
+        const hErr = new Error(
+          'Los servidores de Gemini están con alta demanda temporal en este momento. Intenta en unos segundos.'
+        );
+        hErr.code = 'HIGH_DEMAND';
+        hErr.status = lastError?.status || 503;
+        throw hErr;
       }
+      throw lastError || new Error('No se pudo obtener respuesta de Gemini.');
     }
 
     const data = await response.json();

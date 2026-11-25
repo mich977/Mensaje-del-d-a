@@ -19,7 +19,7 @@
 
   const { renderOracleCanvas, FORMAT_DIMENSIONS, ATMOSPHERE_PALETTES } = global.OraculoCanvas;
 
-  const APP_VERSION = 'v1.0.41';
+  const APP_VERSION = 'v1.0.42';
   const DEFAULT_FIRMA = 'By מיכאל_NB - γ';
   const LEGACY_DEFAULT_FIRMAS = new Set(['By Michael_NB-γ', 'Seed&soul_MNB - γ']);
   const STORAGE_SETTINGS_KEY = 'oraculo_cf_settings';
@@ -608,6 +608,15 @@
       );
     };
 
+    const isHighDemandError = (err) => {
+      const msg = String(err?.message || '');
+      return (
+        err?.code === 'HIGH_DEMAND' ||
+        err?.status === 503 ||
+        /high demand|overloaded|unavailable|spikes in demand|try again later|alta demanda/i.test(msg)
+      );
+    };
+
     const isTimeoutOrNetworkError = (err) => {
       const msg = String(err?.message || '');
       return (
@@ -629,7 +638,29 @@
     try {
       let textPayload;
       let usedQuotaFallback = false;
+      let usedHighDemandFallback = false;
       let usedTimeoutFallback = false;
+
+      const runWithGeminiFallback = async (geminiFn, localFallbackFn) => {
+        try {
+          return await geminiFn();
+        } catch (geminiErr) {
+          if (isQuotaError(geminiErr)) {
+            usedQuotaFallback = true;
+            markQuotaPill();
+            return localFallbackFn();
+          }
+          if (isHighDemandError(geminiErr)) {
+            usedHighDemandFallback = true;
+            return localFallbackFn();
+          }
+          if (isTimeoutOrNetworkError(geminiErr)) {
+            usedTimeoutFallback = true;
+            return localFallbackFn();
+          }
+          throw geminiErr;
+        }
+      };
       let webConnected = false;
       let webAttempted = false;
       let webSources = [];
@@ -702,20 +733,10 @@
           textPayload = buildLocalEphemerisFallback(ephData.item, contexto);
         } else {
           setLoading(true, '2/2 Redactando efeméride con Gemini...');
-          try {
-            textPayload = await generateEphemerisCard(ephData.item, contexto);
-          } catch (geminiErr) {
-            if (isQuotaError(geminiErr)) {
-              usedQuotaFallback = true;
-              markQuotaPill();
-              textPayload = buildLocalEphemerisFallback(ephData.item, contexto);
-            } else if (isTimeoutOrNetworkError(geminiErr)) {
-              usedTimeoutFallback = true;
-              textPayload = buildLocalEphemerisFallback(ephData.item, contexto);
-            } else {
-              throw geminiErr;
-            }
-          }
+          textPayload = await runWithGeminiFallback(
+            () => generateEphemerisCard(ephData.item, contexto),
+            () => buildLocalEphemerisFallback(ephData.item, contexto)
+          );
         }
 
         const [eventArt, natureRes] = await Promise.all([eventPhotoPromise, naturePromise]);
@@ -757,20 +778,10 @@
         if (shouldUseLocalOnly) {
           textPayload = buildLocalOracleFallback(contexto);
         } else {
-          try {
-            textPayload = await generateOracleText(contexto);
-          } catch (geminiErr) {
-            if (isQuotaError(geminiErr)) {
-              usedQuotaFallback = true;
-              markQuotaPill();
-              textPayload = buildLocalOracleFallback(contexto);
-            } else if (isTimeoutOrNetworkError(geminiErr)) {
-              usedTimeoutFallback = true;
-              textPayload = buildLocalOracleFallback(contexto);
-            } else {
-              throw geminiErr;
-            }
-          }
+          textPayload = await runWithGeminiFallback(
+            () => generateOracleText(contexto),
+            () => buildLocalOracleFallback(contexto)
+          );
         }
 
         const natureRes = await naturePromise;
@@ -798,7 +809,10 @@
         webPulseAttempted: webAttempted,
         webSnippet,
         imageDataUrl: artResult.imageDataUrl,
-        artSource: usedQuotaFallback || usedTimeoutFallback ? `${artResult.source} (Respaldo Local)` : artResult.source
+        artSource:
+          usedQuotaFallback || usedHighDemandFallback || usedTimeoutFallback
+            ? `${artResult.source} (Respaldo Local)`
+            : artResult.source
       };
 
       state.currentOracle = finalOracle;
@@ -810,6 +824,12 @@
           '⚠️ Tu API Key alcanzó el límite de cuota/créditos de Gemini (429). Se generó contenido local distinto.',
           'warning',
           7500
+        );
+      } else if (usedHighDemandFallback) {
+        showToast(
+          '⚠️ Los modelos de Gemini están con alta demanda temporal (503). Se generó contenido local para no detenerte.',
+          'warning',
+          6800
         );
       } else if (usedTimeoutFallback) {
         showToast(
